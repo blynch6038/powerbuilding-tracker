@@ -6,6 +6,7 @@ import{supabase,db,idFor,synchronize}from './client';
 import{program,maxTest}from './program';
 import './style.css';
 import './selectors.css';
+import './recommendations.css';
 import PasswordPanel from './PasswordPanel';
 import WarmupRows from './WarmupRows';
 import AppErrorBoundary from './AppErrorBoundary';
