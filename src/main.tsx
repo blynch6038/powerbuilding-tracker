@@ -8,6 +8,7 @@ import './style.css';
 import './selectors.css';
 import PasswordPanel from './PasswordPanel';
 import WarmupRows from './WarmupRows';
+import AppErrorBoundary from './AppErrorBoundary';
 import {alternativeExercises} from './substitutions';
 const dayLabel=(day:DayName):string=>({Monday:'Day 1',Tuesday:'Day 2',Wednesday:'Day 3',Thursday:'Day 4',Friday:'Day 5',Saturday:'Day 6'})[day]||day;
 function App(){
@@ -41,4 +42,4 @@ return <><header className="top"><div className="brand"><b className="mark">P</b
 {tab==='Program'&&program.map(w=><section className="exercise" key={w.week}><h3>Week {w.week}</h3>{w.workouts.map(d=><button className="programButton" key={d.day} onClick={()=>{setWeek(w.week);setDay(d.day);setTab('Today')}}>{'Day '+(w.workouts.indexOf(d)+1)} · {d.title} →</button>)}</section>)}
 {tab==='Progress'&&<><section className="hero"><small>TRAINING COMPLETION</small><h2>{done} sets completed</h2><p>Across your logged sessions</p></section><section className="exercise"><h3>Planned heavy bench targets</h3>{program.map((w,i)=><div className="target" key={w.week}><span>Week {w.week}</span><div className="track"><div style={{width:((w.workouts[0].exercises[0].target||0)/225*100)+'%'}}/></div><b>{w.workouts[0].exercises[0].target} lb</b></div>)}<small>Planned loads, not verified personal records.</small></section></>}
 {tab==='Settings'&&<><PasswordPanel/><section className="exercise"><h3>Account & data</h3><p>{user!.email}</p><button className="action" onClick={sync}>Sync now</button><button className="action" onClick={exportBackup}>Export JSON backup</button><button className="action" onClick={()=>supabase.auth.signOut()}>Sign out</button><small>Entries are saved locally, then synchronized. Back up before clearing browser data.</small></section></>}</main><nav>{['Today','Program','Progress','Settings'].map(t=><button key={t} className={tab===t?'active':''} onClick={()=>setTab(t as TabName)}>{t}</button>)}</nav></>}
-createRoot(document.getElementById('root')!).render(<App/>);
+createRoot(document.getElementById('root')!).render(<AppErrorBoundary><App/></AppErrorBoundary>);
