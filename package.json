@@ -4,10 +4,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "npm run typecheck && npm run test:program && vite build",
+    "build": "npm run typecheck && npm run test:program && npm run test:recommendations && vite build",
     "dev": "vite",
     "typecheck": "tsc --noEmit",
-    "test:program": "node scripts/validate-program.mjs"
+    "test:program": "node scripts/validate-program.mjs",
+    "test:recommendations": "node scripts/test-recommendations.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.57.0",
