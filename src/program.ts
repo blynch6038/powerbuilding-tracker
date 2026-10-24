@@ -13,6 +13,8 @@ function baseItems(i:number,j:number):Exercise[]{
   if(name==='Barbell Bench Press'){const h=heavy[i];return exercise(name,h[0],String(h[1]),h[2])}
   if(name==='Barbell Bench Press (Volume)'){const v=volume[i];return exercise(name,v[0],String(v[1]),v[2])}
   if(name==='Weighted Plank')reps='30 sec';
+  if(name==='Incline Dumbbell Press')reps='8';
+  if(name==='Close-Grip Bench Press')reps='6';
   if(i===8){
     if(j===1&&name==='Barbell Back Squat')sets=3;
     else if(j===3&&name==='Conventional Deadlift')sets=2;
