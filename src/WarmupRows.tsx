@@ -16,9 +16,9 @@ export default function WarmupRows({exercise,userId,week,day,logs,save}:{exercis
     const log=logs.find(l=>l.id===idFor(userId,week,day,warmupExercise.id,n));
     return <div className="row warmup-row" key={n}>
       <b>W{n}</b>
-      {(['weight','reps','rpe'] as const).map(field=><input key={field} type="number" inputMode="decimal"
+      {(['weight','reps','rpe'] as const).map(field=>field==='rpe'?<select key={field} aria-label={exercise.name+' warm-up '+n+' RPE'} value={log?.rpe??''} onChange={e=>save(warmupExercise,n,{rpe:e.target.value===''?null:Number(e.target.value)})}><option value="">—</option>{Array.from({length:10},(_,i)=><option key={i+1} value={i+1}>{i+1}</option>)}</select>:<input key={field} type="number" inputMode="decimal"
         aria-label={exercise.name+' warm-up '+n+' '+field}
-        placeholder={field==='weight'?String(weight):field==='reps'?String(reps):'—'}
+        placeholder={field==='weight'?String(weight):String(reps)}
         value={log?.[field]??''}
         onChange={e=>save(warmupExercise,n,{[field]:e.target.value===''?null:Number(e.target.value)})}/>)}
       <button className={log?.done?'complete':'check'}
