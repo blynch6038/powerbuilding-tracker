@@ -1,3 +1,4 @@
+import './password.css';
 import React,{useState} from 'react';
 import {supabase} from './client';
 export default function PasswordPanel(){
