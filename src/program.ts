@@ -25,7 +25,7 @@ function baseItems(i:number,j:number):Exercise[]{
  });
 }
 export const program:TrainingWeek[]=Array.from({length:10},(_,i)=>{
- let workouts:Workout[] = weekdays.map((day,j)=>plannedDay(day,dayTitles[j],baseItems(i,j)));
+ let workouts:Workout[];
  if(i===9){
   workouts=[
    plannedDay('Monday','Bench Deload',[
@@ -44,6 +44,8 @@ export const program:TrainingWeek[]=Array.from({length:10},(_,i)=>{
     exercise('Readiness Single',1,'1',205),
     exercise('Goal Attempt',1,'1',225)])
   ];
+ } else {
+  workouts=weekdays.map((day,j)=>plannedDay(day,dayTitles[j],baseItems(i,j)));
  }
  return {week:i+1,workouts};
 });
