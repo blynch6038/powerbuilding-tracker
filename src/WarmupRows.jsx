@@ -1,3 +1,4 @@
+import './warmups.css';
 import React from 'react';
 import {idFor} from './client';
 import {warmupSchedule} from './warmupSchedule';
