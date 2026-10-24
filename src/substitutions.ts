@@ -21,7 +21,7 @@ const groups:Record<string,string[]>={
  'Overhead Triceps Extension':['Cable Overhead Triceps Extension','Dumbbell Skull Crusher','Rope Pushdown'],
  'RKC Plank':['Forearm Plank','Hollow-Body Hold','Dead Bug'],
  'Conventional Deadlift':['Trap-Bar Deadlift','Sumo Deadlift','Rack Pull'],
- 'Romanian Deadlift (RDL)':['Dumbbell Romanian Deadlift','Single-Leg Romanian Deadlift','Good Morning'],
+ 'Romanian Deadlift':['Dumbbell Romanian Deadlift','Single-Leg Romanian Deadlift','Good Morning'],
  'Chest-Supported Row':['Seated Cable Row','Machine Row','Incline Dumbbell Row'],
  'Lying Leg Curl':['Seated Leg Curl','Nordic Hamstring Curl','Standing Leg Curl'],
  'Back Extension':['Reverse Hyperextension','Bird Dog','Cable Pull-Through'],
@@ -31,6 +31,8 @@ const groups:Record<string,string[]>={
  'Lat Pulldown':['Assisted Pull-Up','Machine High Row','Neutral-Grip Pulldown'],
  'Cable Chest Fly':['Pec Deck Fly','Dumbbell Fly','Low-to-High Cable Fly'],
  'Pallof Press':['Cable Anti-Rotation Hold','Side Plank','Half-Kneeling Pallof Press'],
+ 'Readiness Single':[],
+ 'Goal Attempt':[],
  'Recovery / Mobility':['Easy Walking','Stationary Cycling','Mobility Flow']
 };
 export function alternativeExercises(exercise:Exercise):string[]{
