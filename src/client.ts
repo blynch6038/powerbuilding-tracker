@@ -15,37 +15,45 @@ export async function synchronize(userId:string):Promise<number|undefined>{
  if(syncing||!navigator.onLine)return;
  syncing=true;
  try{
-  const pendingSubs=await db.substitutions.where('dirty').equals(1).filter(x=>x.user_id===userId).toArray();
-  for(const row of pendingSubs){
-   const {dirty,...payload}=row;
-   const {error}=await supabase.from('exercise_substitutions').upsert(payload,{onConflict:'id'});
-   if(error)throw error;
-   const local=await db.substitutions.get(row.id);
-   if(local?.updated_at===row.updated_at)await db.substitutions.update(row.id,{dirty:0});
+  // Pull first: a stale local pending record must not prevent the 96 imported Week 1 rows from appearing.
+  const{data:remote,error:pullError}=await supabase.from('set_logs').select('*').eq('user_id',userId).limit(10000);
+  if(pullError)throw pullError;
+  let conflicts=0;
+  for(const row of remote||[]){
+   const local=await db.logs.get(row.id);
+   // A never-completed blank form field is superseded by a completed cloud import.
+   const emptyDraft=local?.dirty===1&&!local.done&&local.weight==null&&local.reps==null;
+   if(!local||emptyDraft&&row.done||(!local.dirty&&row.updated_at>local.updated_at)){
+    await db.logs.put({...row,dirty:0} as WorkoutLog);
+   }else if(local.dirty&&row.updated_at>local.updated_at){
+    conflicts++;
+   }
   }
+  const{data:remoteSubs,error:subPullError}=await supabase.from('exercise_substitutions').select('*').eq('user_id',userId).limit(10000);
+  if(subPullError)throw subPullError;
+  for(const row of remoteSubs||[]){
+   const local=await db.substitutions.get(row.id);
+   if(!local||(!local.dirty&&row.updated_at>local.updated_at))await db.substitutions.put({...row,dirty:0} as ExerciseSubstitution);
+  }
+  // Upload after pull, without aborting the whole sync on an individual conflict.
   const pending=await db.logs.where('dirty').equals(1).filter(x=>x.user_id===userId).toArray();
   for(const item of pending){
    const{dirty,...p}=item;
    const{data,error}=await supabase.rpc('sync_set_log',{p_id:p.id,p_week:p.week,p_day:p.day,p_exercise_id:p.exercise_id,p_set_number:p.set_number,p_weight:p.weight,p_reps:p.reps,p_rpe:p.rpe,p_done:p.done,p_updated_at:p.updated_at});
    if(error)throw error;
-   if(data==='conflict')throw new Error('A newer copy exists in the cloud. Local edits were preserved; export a backup before resolving.');
+   if(data==='conflict'){conflicts++;continue;}
    const current=await db.logs.get(item.id);
    if(current?.updated_at===item.updated_at)await db.logs.update(item.id,{dirty:0});
   }
-  const{data,error}=await supabase.from('set_logs').select('*').eq('user_id',userId).limit(10000);
-  if(error)throw error;
-  for(const row of data||[]){
-   const local=await db.logs.get(row.id);
-   if(!local||(!local.dirty&&row.updated_at>local.updated_at)){
-    await db.logs.put({...row,dirty:0} as WorkoutLog);
-   }
+  const pendingSubs=await db.substitutions.where('dirty').equals(1).filter(x=>x.user_id===userId).toArray();
+  for(const row of pendingSubs){
+   const {dirty,...payload}=row;
+   const {error}=await supabase.from('exercise_substitutions').upsert(payload,{onConflict:'id'});
+   if(error)throw error;
+   const current=await db.substitutions.get(row.id);
+   if(current?.updated_at===row.updated_at)await db.substitutions.update(row.id,{dirty:0});
   }
-  const {data:remoteSubs,error:subErr}=await supabase.from('exercise_substitutions').select('*').eq('user_id',userId).limit(10000);
-  if(subErr)throw subErr;
-  for(const row of remoteSubs||[]){
-   const local=await db.substitutions.get(row.id);
-   if(!local||(!local.dirty&&row.updated_at>local.updated_at))await db.substitutions.put({...row,dirty:0} as ExerciseSubstitution);
-  }
+  if(conflicts)console.warn('Powerbuilding sync preserved pending local conflicts:',conflicts);
   return pending.length+pendingSubs.length;
  }finally{syncing=false;}
 }
