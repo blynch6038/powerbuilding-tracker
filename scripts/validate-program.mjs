@@ -19,4 +19,7 @@ for (const [index,week] of program.entries()){
 assert.equal(program[0].workouts[0].exercises[0].sets,5);
 assert.equal(program[9].workouts.at(-1).title,'225 lb Bench Max Test');
 assert.ok(!program[9].workouts.some(w=>w.exercises.some(e=>e.name==='Barbell Bench Press (Volume)')));
+assert.equal(program[0].workouts[4].exercises[0].id,'barbell-bench-press-volume','Friday volume bench ID must match saved Supabase records');
+assert.equal(program[0].workouts[4].exercises[0].id+'-warmup','barbell-bench-press-volume-warmup','Friday warm-up IDs must match saved records');
+for(const week of program)for(const day of week.workouts)for(const ex of day.exercises)assert.equal(ex.id.replace(/^-+|-+$/g,''),ex.id,'Exercise IDs cannot have leading/trailing separators');
 console.log('Validated 10 weeks, 50 workouts, and all exercise prescriptions.');
