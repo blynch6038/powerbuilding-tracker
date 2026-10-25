@@ -5,7 +5,7 @@ const heavy=[[5,5,155],[5,5,160],[5,4,165],[5,4,170],[5,3,175],[5,3,180],[4,3,18
 const volume=[[4,8,135],[4,8,140],[4,7,145],[4,6,150],[4,6,150],[4,5,155],[3,5,155],[3,4,160],[3,3,145]];
 export const benchHeavy=heavy.map(x=>x[2]);
 export const benchVolume=volume.map(x=>x[2]);
-const idFor=(name:string)=>name.toLowerCase().replace(/[^a-z0-9]+/g,'-');
+const idFor=(name:string)=>name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
 function exercise(name:string,sets:number,reps:string,target:number|null=null):Exercise{return{id:idFor(name),name,sets,reps,target}}
 function plannedDay(day:DayName,title:string,items:Exercise[]):Workout{return{day,title,exercises:items}}
 function baseItems(i:number,j:number):Exercise[]{
