@@ -15,6 +15,26 @@ import {recommendWeight} from './recommendations';
 const dayLabel=(day:DayName):string=>({Monday:'Day 1',Tuesday:'Day 2',Wednesday:'Day 3',Thursday:'Day 4',Friday:'Day 5',Saturday:'Day 6'})[day]||day;
 function App(){
 const[resetMode,setResetMode]=useState(false),[resetSent,setResetSent]=useState(false),[resetBusy,setResetBusy]=useState(false),[user,setUser]=useState<User|null>(null),[loading,setLoading]=useState(true),[email,setEmail]=useState(''),[password,setPassword]=useState(''),[error,setError]=useState(''),[week,setWeek]=useState(1),[day,setDay]=useState<DayName>('Monday'),[tab,setTab]=useState<TabName>('Today'),[logs,setLogs]=useState<WorkoutLog[]>([]),[cloudLogs,setCloudLogs]=useState<WorkoutLog[]>([]),[substitutions,setSubstitutions]=useState<ExerciseSubstitution[]>([]),[status,setStatus]=useState('Ready'),[newPassword,setNewPassword]=useState(''),[passwordSetup,setPasswordSetup]=useState(false);
+const [restoredUser,setRestoredUser]=useState<string|null>(null);
+useEffect(()=>{
+ setRestoredUser(null);
+ if(!user)return;
+ try{
+  const saved=JSON.parse(localStorage.getItem('powerbuilder:last-workout:'+user.id)||'null') as {week?:number;day?:DayName}|null;
+  if(saved&&Number.isInteger(saved.week)&&saved.week!>=1&&saved.week!<=program.length){
+   const selected=program[saved.week!-1].workouts.find(w=>w.day===saved.day);
+   if(selected){setWeek(saved.week!);setDay(selected.day)}
+  }
+ }catch{/* Invalid or unavailable local storage: retain default workout. */}
+ setRestoredUser(user.id);
+},[user?.id]);
+useEffect(()=>{
+ if(!user||restoredUser!==user.id)return;
+ try{
+  const validDay=program[week-1]?.workouts.some(w=>w.day===day);
+  localStorage.setItem('powerbuilder:last-workout:'+user.id,JSON.stringify({week,day:validDay?day:program[week-1].workouts[0].day}));
+ }catch{/* Private browsing may disable storage. */}
+},[user?.id,restoredUser,week,day]);
 useEffect(()=>{supabase.auth.getSession().then(({data})=>{setUser(data.session?.user||null);setLoading(false)});const{data:{subscription}}=supabase.auth.onAuthStateChange((event,session)=>{setUser(session?.user||null);if(event==='PASSWORD_RECOVERY'||(event==='SIGNED_IN'&&location.hash.includes('type=invite')))setPasswordSetup(true)});return()=>subscription.unsubscribe()},[]);
 async function reload(){if(!user)return;try{const [savedLogs,savedChoices]=await Promise.all([db.logs.where('user_id').equals(user.id).toArray(),db.substitutions.where('user_id').equals(user.id).toArray()]);setLogs(savedLogs);setSubstitutions(savedChoices)}catch(e){setStatus('Local storage problem: '+(e instanceof Error?e.message:'Unknown error'))}}
 async function loadCloudHistory(){if(!user||!navigator.onLine)return;const {data,error}=await supabase.from('set_logs').select('*').eq('user_id',user.id).limit(10000);if(error)throw error;setCloudLogs((data||[]).map(row=>({...row,dirty:0} as WorkoutLog)))}
