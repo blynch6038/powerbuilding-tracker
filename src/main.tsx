@@ -41,7 +41,7 @@ const activeExercise=(ex:Exercise):Exercise=>{
 };
 async function changeExercise(ex:Exercise,replacement:string){
  const future=window.confirm('Apply this exercise change to this week and all future weeks?\n\nOK = this week and future weeks. Cancel = this week only.');
- const weeks=future?Array.from({length:11-week},(_,i)=>week+i):[week];
+ const weeks=(future?Array.from({length:11-week},(_,i)=>week+i):[week]).filter(w=>program[w-1].workouts.find(x=>x.day===workout.day)?.exercises.some(x=>x.id===ex.id));
  const now=new Date().toISOString();
  await db.substitutions.bulkPut(weeks.map(w=>({
   id:user!.id+':'+w+':'+workout.day+':'+ex.id,user_id:user!.id,week:w,day:workout.day,
