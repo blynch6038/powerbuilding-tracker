@@ -6,6 +6,15 @@ Reconstructed from the repository's complete reachable commit history through Oc
 
 Added this dated, commit-linked history; linked documentation from the README; corrected stale documentation and distinguished historical validation from current implementation status. This documentation-only update changes no application code or database schema.
 
+## 2026-10-28 — Exercise notes, progress values, and movement names
+
+- Added dated, append-only exercise notes for each account/week/day/active exercise. Notes save offline, retry sync using stable UUIDs, and remain independent from set records and other devices' notes. Notes are included in exports.
+- Added explicit current recorded values and point/bar labels to native Progress charts; web Progress shows planned and actual bench pounds by week and the current recorded bench load. Current means the latest program week with qualifying completed data, not the most recently edited timestamp. Volume and RPE keep their own units.
+- Changed the default Conventional Deadlift slot to Trap-Bar Deadlift, including Week 10. Conventional records retain their original IDs; trap-bar sets use the existing substitution identity. Explicit saved exercise choices still take precedence.
+- Standardized Flat Dumbbell Press display names to Dumbbell Chest Press while preserving legacy slot/substitution IDs and prescriptions. Historical records are not merged or renamed.
+- Added the shared `exercise_notes` table with owner-only SELECT/INSERT, membership checks, RLS, and no UPDATE/DELETE access. This additive schema change leaves existing set logs and choices untouched. Canonical SQL is in the web repository's `schema/exercise_notes.sql`.
+- Validation: web TypeScript, program/recommendation, naming/history and real IndexedDB/mock-HTTP note tests; web production build; generated native program/warm-up parity and 7,514 recommendation scenarios. Database access checks passed using transaction-only fixtures rolled back afterward. Native note contract tests were added but could not be run here because Xcode is unavailable. Browser UI checks and authenticated device-to-device acceptance remain unverified.
+
 ## Recorded implementation history
 
 | Committed at (EDT) | Change | Commit |

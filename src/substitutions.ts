@@ -19,10 +19,11 @@ const groups:Record<string,string[]>={
  'Seated Dumbbell Shoulder Press':['Machine Shoulder Press','Standing Barbell Press','Landmine Press'],
  'Cable Serratus Punch':['Dumbbell Serratus Punch','Scapular Wall Slide','Cable Press'],
  'Overhead Triceps Extension':['Cable Overhead Triceps Extension','Dumbbell Skull Crusher','Rope Pushdown'],
- 'Dumbbell Chest Press':['Dumbbell Floor Press','Flat Dumbbell Press','Machine Chest Press'],
+ 'Dumbbell Chest Press':['Dumbbell Floor Press','Machine Chest Press','Barbell Bench Press','Smith Machine Bench Press'],
  'Cable Biceps Curl':['Dumbbell Biceps Curl','EZ-Bar Curl','RKC Plank'],
  'RKC Plank':['Cable Biceps Curl','Forearm Plank','Hollow-Body Hold','Dead Bug'],
  'Conventional Deadlift':['Trap-Bar Deadlift','Sumo Deadlift','Rack Pull'],
+ 'Trap-Bar Deadlift':['Conventional Deadlift','Sumo Deadlift','Rack Pull'],
  'Romanian Deadlift':['Dumbbell Romanian Deadlift','Single-Leg Romanian Deadlift','Good Morning'],
  'Chest-Supported Row':['Seated Cable Row','Machine Row','Incline Dumbbell Row'],
  'Lying Leg Curl':['Seated Leg Curl','Nordic Hamstring Curl','Standing Leg Curl'],
@@ -37,9 +38,10 @@ const groups:Record<string,string[]>={
  'Goal Attempt':[],
  'Recovery / Mobility':['Easy Walking','Stationary Cycling','Mobility Flow']
 };
+export const canonicalExerciseName=(name:string):string=>name==='Flat Dumbbell Press'?'Dumbbell Chest Press':name;
 export function alternativeExercises(exercise:Exercise):string[]{
  const options=groups[exercise.name]||['Dumbbell Variation','Machine Variation','Cable Variation'];
- return [...new Set([exercise.name,...(exercise.originalName?[exercise.originalName]:[]),...options])];
+ return [...new Set([exercise.name,...(exercise.originalName?[exercise.originalName]:[]),...options].map(canonicalExerciseName))];
 }
 
 // Choice rows always reference the original program slot. Never rename or copy set logs.
@@ -47,8 +49,8 @@ export function resolveExercise(exercise:Exercise,replacement=exercise.name):Exe
  const original=exercise.originalName||exercise.name;
  const reps=replacement==='Cable Biceps Curl'?'10–12':exercise.originalReps||exercise.reps;
  const sets=replacement==='Cable Biceps Curl'&&exercise.id==='rkc-plank'?3:exercise.sets;
- if(replacement===original)return {...exercise,name:replacement,reps,sets};
- return {...exercise,name:replacement,reps,sets,target:null,
+ if(replacement===original || original==='Flat Dumbbell Press'&&canonicalExerciseName(replacement)==='Dumbbell Chest Press')return {...exercise,name:canonicalExerciseName(replacement),reps,sets};
+ return {...exercise,name:canonicalExerciseName(replacement),reps,sets,target:null,
   id:exercise.id+'--sub--'+replacement.toLowerCase().replace(/[^a-z0-9]+/g,'-')};
 }
 export function substitutionWeeks(program:import('./types').TrainingWeek[],week:number,day:import('./types').DayName,id:string,future:boolean):number[]{

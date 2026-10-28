@@ -29,3 +29,9 @@ The TypeScript/React app includes all 10 weeks and 50 workouts, prescribed warm-
 
 ## Current limits
 Invitation acceptance, production site and real user workout sync require end-to-end browser verification. Offline first visit requires an earlier online load to cache PWA assets. Workout plans are included, but workout histories are tied to the current account.
+
+## October 28 updates
+
+Each exercise has dated notes for changes or other details, scoped to the account, workout week/day, and active exercise. Add a note explicitly to save it offline; pending notes sync with the other app and are included in backups. Notes are append-only so simultaneous additions from two devices are preserved.
+
+The default deadlift is Trap-Bar Deadlift. Flat Dumbbell Press is displayed as Dumbbell Chest Press. Existing exercise choices and historical IDs remain intact. Progress shows explicit recorded values alongside the plots; missing records remain “—”. See [change log](CHANGELOG.md) for details and verification limits.

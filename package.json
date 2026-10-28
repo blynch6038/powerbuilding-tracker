@@ -4,11 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "npm run typecheck && npm run test:program && npm run test:recommendations && node scripts/test-substitutions.mjs && vite build",
+    "build": "npm run typecheck && npm run test:program && npm run test:recommendations && node scripts/test-substitutions.mjs && node scripts/test-notes.mjs && vite build",
     "dev": "vite",
     "typecheck": "tsc --noEmit",
     "test:program": "node scripts/validate-program.mjs",
-    "test:recommendations": "node scripts/test-recommendations.mjs"
+    "test:recommendations": "node scripts/test-recommendations.mjs",
+    "test:notes": "node scripts/test-notes.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.57.0",
@@ -21,6 +22,7 @@
     "@types/react-dom": "19.1.6",
     "@vitejs/plugin-react": "4.7.0",
     "esbuild": "0.25.12",
+    "fake-indexeddb": "6.2.4",
     "typescript": "5.8.3",
     "vite": "6.3.0",
     "vite-plugin-pwa": "1.0.0"

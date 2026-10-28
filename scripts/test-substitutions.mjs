@@ -40,3 +40,18 @@ const blocked={getItem:()=>{throw Error('storage disabled')},setItem:()=>{throw 
 assert.deepEqual(readWorkoutSelection('alice',blocked),{week:1,day:'Monday'});
 rememberWorkoutSelection('alice',2,'Wednesday',blocked);
 console.log('Workout restoration tests passed: per-account persistence, valid Week 10 day, invalid/disabled storage.');
+
+for (const week of program) {
+ const deadlift=week.workouts.find(w=>w.day==='Thursday').exercises[0];
+ assert.equal(deadlift.id,'conventional-deadlift');
+ assert.equal(resolveExercise(deadlift).name,'Trap-Bar Deadlift');
+ assert.equal(resolveExercise(deadlift).id,'conventional-deadlift--sub--trap-bar-deadlift');
+ assert.equal(resolveExercise(deadlift,'Conventional Deadlift').id,'conventional-deadlift');
+ const friday=week.workouts.find(w=>w.day==='Friday');
+ if(friday){const press=friday.exercises.find(e=>e.id==='flat-dumbbell-press');assert.equal(resolveExercise(press).name,'Dumbbell Chest Press');assert.equal(resolveExercise(press).id,'flat-dumbbell-press');}
+ for(const workout of week.workouts)for(const ex of workout.exercises)assert(!alternativeExercises(ex).includes('Flat Dumbbell Press'));
+}
+const floor=program[1].workouts[2].exercises[1];
+assert.equal(resolveExercise(floor,'Flat Dumbbell Press').name,'Dumbbell Chest Press');
+assert.equal(resolveExercise(floor,'Flat Dumbbell Press').id,'dumbbell-floor-press--sub--flat-dumbbell-press');
+console.log('October 28 naming tests passed: trap-bar defaults, conventional history and legacy flat-press IDs.');
