@@ -2,7 +2,7 @@ import React,{useEffect,useState} from 'react';
 import type {User} from '@supabase/supabase-js';
 import type{DayName,Exercise,WorkoutLog,WorkoutPatch,TabName,ExerciseSubstitution}from './types';
 import{createRoot}from'react-dom/client';
-import{supabase,db,idFor,synchronize}from './client';
+import{supabase,db,idFor,synchronize,cloudRows}from './client';
 import{program,maxTest}from './program';
 import './style.css';
 import './selectors.css';
@@ -10,64 +10,55 @@ import './recommendations.css';
 import PasswordPanel from './PasswordPanel';
 import WarmupRows from './WarmupRows';
 import AppErrorBoundary from './AppErrorBoundary';
-import {alternativeExercises} from './substitutions';
+import {alternativeExercises,resolveExercise,substitutionWeeks} from './substitutions';
+import {readWorkoutSelection,rememberWorkoutSelection} from './workoutSelection';
 import {recommendWeight} from './recommendations';
 const dayLabel=(day:DayName):string=>({Monday:'Day 1',Tuesday:'Day 2',Wednesday:'Day 3',Thursday:'Day 4',Friday:'Day 5',Saturday:'Day 6'})[day]||day;
+const historyExerciseName=(ex:Exercise,id:string)=>id===ex.id?(ex.originalName||ex.name):id.split('--sub--').slice(1).join('--sub--').replace(/-/g,' ');
 function App(){
 const[resetMode,setResetMode]=useState(false),[resetSent,setResetSent]=useState(false),[resetBusy,setResetBusy]=useState(false),[user,setUser]=useState<User|null>(null),[loading,setLoading]=useState(true),[email,setEmail]=useState(''),[password,setPassword]=useState(''),[error,setError]=useState(''),[week,setWeek]=useState(1),[day,setDay]=useState<DayName>('Monday'),[tab,setTab]=useState<TabName>('Today'),[logs,setLogs]=useState<WorkoutLog[]>([]),[cloudLogs,setCloudLogs]=useState<WorkoutLog[]>([]),[substitutions,setSubstitutions]=useState<ExerciseSubstitution[]>([]),[status,setStatus]=useState('Ready'),[newPassword,setNewPassword]=useState(''),[passwordSetup,setPasswordSetup]=useState(false);
+const [applyFuture,setApplyFuture]=useState(false);
 const [restoredUser,setRestoredUser]=useState<string|null>(null);
 useEffect(()=>{
  setRestoredUser(null);
+ setWeek(1);setDay('Monday');setLogs([]);setCloudLogs([]);setSubstitutions([]);
  if(!user)return;
- try{
-  const saved=JSON.parse(localStorage.getItem('powerbuilder:last-workout:'+user.id)||'null') as {week?:number;day?:DayName}|null;
-  if(saved&&Number.isInteger(saved.week)&&saved.week!>=1&&saved.week!<=program.length){
-   const selected=program[saved.week!-1].workouts.find(w=>w.day===saved.day);
-   if(selected){setWeek(saved.week!);setDay(selected.day)}
-  }
- }catch{/* Invalid or unavailable local storage: retain default workout. */}
+ const saved=readWorkoutSelection(user.id);setWeek(saved.week);setDay(saved.day);
  setRestoredUser(user.id);
 },[user?.id]);
 useEffect(()=>{
  if(!user||restoredUser!==user.id)return;
- try{
-  const validDay=program[week-1]?.workouts.some(w=>w.day===day);
-  localStorage.setItem('powerbuilder:last-workout:'+user.id,JSON.stringify({week,day:validDay?day:program[week-1].workouts[0].day}));
- }catch{/* Private browsing may disable storage. */}
+ rememberWorkoutSelection(user.id,week,day);
 },[user?.id,restoredUser,week,day]);
 useEffect(()=>{supabase.auth.getSession().then(({data})=>{setUser(data.session?.user||null);setLoading(false)});const{data:{subscription}}=supabase.auth.onAuthStateChange((event,session)=>{setUser(session?.user||null);if(event==='PASSWORD_RECOVERY'||(event==='SIGNED_IN'&&location.hash.includes('type=invite')))setPasswordSetup(true)});return()=>subscription.unsubscribe()},[]);
 async function reload(){if(!user)return;try{const [savedLogs,savedChoices]=await Promise.all([db.logs.where('user_id').equals(user.id).toArray(),db.substitutions.where('user_id').equals(user.id).toArray()]);setLogs(savedLogs);setSubstitutions(savedChoices)}catch(e){setStatus('Local storage problem: '+(e instanceof Error?e.message:'Unknown error'))}}
-async function loadCloudHistory(){if(!user||!navigator.onLine)return;const {data,error}=await supabase.from('set_logs').select('*').eq('user_id',user.id).limit(10000);if(error)throw error;setCloudLogs((data||[]).map(row=>({...row,dirty:0} as WorkoutLog)))}
+async function loadCloudHistory(){if(!user||!navigator.onLine)return;const data=await cloudRows<WorkoutLog>('set_logs',user.id);setCloudLogs((data||[]).map(row=>({...row,dirty:0} as WorkoutLog)))}
 async function sync(){if(!user||!navigator.onLine)return;setStatus('Syncing');try{await loadCloudHistory();await synchronize(user.id);setStatus('Synced')}catch(e){setStatus('Sync paused: '+(e instanceof Error?e.message:'Unknown error'))}finally{await reload();try{await loadCloudHistory()}catch(e){console.warn('Cloud display refresh paused',e)}}}
 useEffect(()=>{reload();if(user)sync()},[user?.id]);
 useEffect(()=>{const timer=setInterval(()=>sync(),45000),online=()=>sync();window.addEventListener('online',online);return()=>{clearInterval(timer);window.removeEventListener('online',online)}},[user?.id]);
 const displayedLogs=React.useMemo(()=>{
  const merged=new Map<string,WorkoutLog>();
- for(const row of cloudLogs)merged.set(row.id,row);
- for(const row of logs){
+ for(const row of cloudLogs.filter(x=>x.user_id===user?.id))merged.set(row.id,row);
+ for(const row of logs.filter(x=>x.user_id===user?.id)){
   const remote=merged.get(row.id);
   if(!remote||row.dirty||row.updated_at>=remote.updated_at)merged.set(row.id,row);
   // Preserve server-imported completed sets instead of displaying an incomplete local draft.
   if(remote?.done&&!row.done&&row.updated_at<remote.updated_at)merged.set(row.id,remote);
  }
  return [...merged.values()];
-},[logs,cloudLogs]);
+},[logs,cloudLogs,user?.id]);
 const workout=program[week-1].workouts.find(w=>w.day===day)||program[week-1].workouts[0];
 const chosen=(ex:Exercise)=>substitutions.find(x=>x.id===user!.id+':'+week+':'+workout.day+':'+ex.id)?.replacement||ex.name;
-const activeExercise=(ex:Exercise):Exercise=>{
- const replacement=chosen(ex);
- if(replacement===ex.name)return ex;
- return {...ex,name:replacement,id:ex.id+'--sub--'+replacement.toLowerCase().replace(/[^a-z0-9]+/g,'-'),target:null,reps:replacement==='Cable Biceps Curl'?'10–12':ex.reps};
-};
+const activeExercise=(ex:Exercise):Exercise=>resolveExercise(ex,chosen(ex));
 async function changeExercise(ex:Exercise,replacement:string){
- const future=window.confirm('Apply this exercise change to this week and all future weeks?\n\nOK = this week and future weeks. Cancel = this week only.');
- const weeks=(future?Array.from({length:11-week},(_,i)=>week+i):[week]).filter(w=>program[w-1].workouts.find(x=>x.day===workout.day)?.exercises.some(x=>x.id===ex.id));
+ const weeks=substitutionWeeks(program,week,workout.day,ex.id,applyFuture);
  const now=new Date().toISOString();
- await db.substitutions.bulkPut(weeks.map(w=>({
+ try{await db.transaction('rw',db.substitutions,()=>db.substitutions.bulkPut(weeks.map(w=>({
   id:user!.id+':'+w+':'+workout.day+':'+ex.id,user_id:user!.id,week:w,day:workout.day,
   exercise_id:ex.id,replacement,updated_at:now,dirty:1 as const
- })));
+ }))));
  await reload();setStatus('Exercise choice saved on device • pending sync');
+ }catch(e){setStatus('Exercise choice could not be saved: '+(e instanceof Error?e.message:'Storage unavailable'))}
 }
 async function save(ex:Exercise,n:number,patch:WorkoutPatch){const id=idFor(user!.id,week,workout.day,ex.id,n);const old=await db.logs.get(id);const record={id,user_id:user!.id,week,day:workout.day,exercise_id:ex.id,set_number:n,weight:null,reps:null,rpe:null,done:false,deleted_at:null,...old,...patch,updated_at:new Date().toISOString(),dirty:1 as const};await db.logs.put(record);await reload();setStatus('Saved on device • pending sync')}
 async function signIn(e:React.FormEvent<HTMLFormElement>){e.preventDefault();setError('');const {error}=await supabase.auth.signInWithPassword({email,password});if(error)setError(error.message)}
@@ -78,7 +69,7 @@ if(!user)return <main className="login"><div className="logo">P</div><h1>Powerbu
 if(passwordSetup)return <main className="login"><div className="logo">P</div><h1>Create your password</h1><form className="panel" onSubmit={async e=>{e.preventDefault();const {error}=await supabase.auth.updateUser({password:newPassword});if(error)setError(error.message);else{setPasswordSetup(false);history.replaceState({},'',location.pathname)}}}><input type="password" required minLength={12} value={newPassword} onChange={e=>setNewPassword(e.target.value)} placeholder="12+ character password"/>{error&&<p className="error">{error}</p>}<button className="primary">Save password</button></form></main>;
 const done=displayedLogs.filter(x=>x.done&&!x.exercise_id.endsWith('-warmup')).length;
 return <><header className="top"><div className="brand"><b className="mark">P</b><div><strong>POWERBUILDING</strong><small>TRAIN STRONGER</small></div></div><button onClick={sync}>↻</button></header><main className="screen"><p className="eyebrow">YOUR TRAINING SPACE</p><h1>{tab==='Today'?'Make every rep count.':tab==='Program'?'The game plan.':tab==='Progress'?'Keep building.':'Your account.'}</h1><p className="status">● {navigator.onLine?status:'Offline • saved on device'}</p>
-{tab==='Today'&&<><section className="week"><button onClick={()=>setWeek(Math.max(1,week-1))}>‹</button><div><small>TRAINING BLOCK</small><h2>Week {week} <span>/ 10</span></h2></div><button onClick={()=>setWeek(Math.min(10,week+1))}>›</button></section><div className="days">{program[week-1].workouts.map(w=><button key={w.day} className={w.day===workout.day?'selected':''} onClick={()=>setDay(w.day)}>{'Day '+(program[week-1].workouts.indexOf(w)+1)}</button>)}</div><section className="hero"><small>{'DAY '+(program[week-1].workouts.indexOf(workout)+1)} • WEEK {week}</small><h2>{workout.title}</h2><p>{displayedLogs.filter(l=>l.week===week&&l.day===workout.day&&l.done&&!l.exercise_id.endsWith('-warmup')).length} completed sets</p></section><h3>Exercises</h3>{workout.exercises.map((ex,i)=><section className="exercise" key={ex.id}><div className="exerciseTitle"><span>{String(i+1).padStart(2,'0')}</span><div><h3>{chosen(ex)}</h3><small>{ex.sets} sets • {activeExercise(ex).reps} reps {ex.target!==null?'• '+ex.target+' lb target':''}</small></div></div><label className="substitute-label">Exercise <select aria-label={'Substitute '+ex.name} value={chosen(ex)} onChange={e=>changeExercise(ex,e.target.value)}>{[...new Set([...alternativeExercises(ex),chosen(ex),...(ex.name==='RKC Plank'?['Cable Biceps Curl']:[])])].map(name=><option key={name} value={name}>{name}</option>)}</select></label>{week>1&&ex.sets>0&&<div className="recommendation"><strong>Weight recommendation</strong>{(()=>{const recommendation=recommendWeight(week,workout.day,activeExercise(ex),displayedLogs);return <><div className="recommendation-head"><span>{recommendation.weight!==null?<b>{recommendation.weight} lb</b>:<b>Choose weight</b>}</span><span>{recommendation.isBenchGoal?'Bench Goal Mode':'Adaptive Accessory Mode'}</span></div>{ex.target!==null&&<small>Original prescribed target: {ex.target} lb</small>}<p>{recommendation.reason}</p>{recommendation.previous&&<small>Based on {recommendation.previous}</small>}<small>Suggestion only — enter the weight you actually use below.</small></>})()}</div>}{i===0&&chosen(ex)===ex.name&&<WarmupRows exercise={ex} userId={user!.id} week={week} day={workout.day} logs={displayedLogs} save={save}/>}<div className="working-heading">Working sets</div><div className="row headings"><span>SET</span><span>LB</span><span>REPS</span><span>RPE</span><span>✓</span></div>{Array.from({length:ex.sets},(_,n)=>{const l=displayedLogs.find(x=>x.id===idFor(user!.id,week,workout.day,activeExercise(ex).id,n+1));return <div className="row" key={n}><b>{n+1}</b>{(['weight','reps','rpe'] as const).map(field=>field==='rpe'?<select key={field} aria-label={chosen(ex)+' RPE set '+(n+1)} value={l?.rpe??''} onChange={e=>save(activeExercise(ex),n+1,{rpe:e.target.value===''?null:Number(e.target.value)})}><option value="">—</option>{Array.from({length:10},(_,i)=><option key={i+1} value={i+1}>{i+1}</option>)}</select>:<input key={field} type="number" inputMode="decimal" aria-label={chosen(ex)+' '+field+' set '+(n+1)} placeholder={field==='weight'&&ex.target?String(ex.target):'—'} value={l?.[field]??''} onChange={e=>save(activeExercise(ex),n+1,{[field]:e.target.value===''?null:Number(e.target.value)})}/>)}<button className={l?.done?'complete':'check'} onClick={()=>save(activeExercise(ex),n+1,{done:!l?.done})}>✓</button></div>})}</section>)}{week===10&&workout.day==='Saturday'&&<section className="exercise"><h3>Day 5 • Bench Max Test</h3><p>Use a spotter and appropriate safeties. Attempt 225 lb only if preceding sets move well.</p><p>Record the warm-up sets and the 205 lb readiness single and 225 lb goal attempt above.</p></section>}</>}
+{tab==='Today'&&<><section className="week"><button onClick={()=>setWeek(Math.max(1,week-1))}>‹</button><div><small>TRAINING BLOCK</small><h2>Week {week} <span>/ 10</span></h2></div><button onClick={()=>setWeek(Math.min(10,week+1))}>›</button></section><div className="days">{program[week-1].workouts.map(w=><button key={w.day} className={w.day===workout.day?'selected':''} onClick={()=>setDay(w.day)}>{'Day '+(program[week-1].workouts.indexOf(w)+1)}</button>)}</div><section className="hero"><small>{'DAY '+(program[week-1].workouts.indexOf(workout)+1)} • WEEK {week}</small><h2>{workout.title}</h2><p>{displayedLogs.filter(l=>l.week===week&&l.day===workout.day&&l.done&&!l.exercise_id.endsWith('-warmup')).length} completed sets</p></section><h3>Exercises</h3><label className="substitute-label">Exercise changes apply to<select value={applyFuture?'future':'current'} onChange={e=>setApplyFuture(e.target.value==='future')}><option value="current">This week only</option><option value="future">This and future weeks where this exercise exists</option></select></label>{workout.exercises.map((ex,i)=><section className="exercise" key={ex.id}><div className="exerciseTitle"><span>{String(i+1).padStart(2,'0')}</span><div><h3>{chosen(ex)}</h3><small>{activeExercise(ex).sets} sets • {activeExercise(ex).reps} reps {activeExercise(ex).target!==null?'• '+activeExercise(ex).target+' lb target':''}</small></div></div><label className="substitute-label">Exercise <select aria-label={'Substitute '+ex.name} value={chosen(ex)} onChange={e=>changeExercise(ex,e.target.value)}>{[...new Set([...alternativeExercises(ex),chosen(ex)])].map(name=><option key={name} value={name}>{name}</option>)}</select></label>{week>1&&ex.sets>0&&<div className="recommendation"><strong>Weight recommendation</strong>{(()=>{const recommendation=recommendWeight(week,workout.day,activeExercise(ex),displayedLogs);return <><div className="recommendation-head"><span>{recommendation.weight!==null?<b>{recommendation.weight} lb</b>:<b>Choose weight</b>}</span><span>{recommendation.isBenchGoal?'Bench Goal Mode':'Adaptive Accessory Mode'}</span></div>{ex.target!==null&&<small>Original prescribed target: {ex.target} lb</small>}<p>{recommendation.reason}</p>{recommendation.previous&&<small>Based on {recommendation.previous}</small>}<small>Suggestion only — enter the weight you actually use below.</small></>})()}</div>}{i===0&&activeExercise(ex).id===ex.id&&<WarmupRows exercise={ex} userId={user!.id} week={week} day={workout.day} logs={displayedLogs} save={save}/>}{displayedLogs.some(l=>l.week===week&&l.day===workout.day&&l.exercise_id!==activeExercise(ex).id&&(l.exercise_id===ex.id||l.exercise_id.startsWith(ex.id+'--sub--')))&&<details><summary>Previous exercise entries (preserved)</summary>{displayedLogs.filter(l=>l.week===week&&l.day===workout.day&&l.exercise_id!==activeExercise(ex).id&&(l.exercise_id===ex.id||l.exercise_id.startsWith(ex.id+'--sub--'))).map(l=><p key={l.id}>{historyExerciseName(ex,l.exercise_id)} · Set {l.set_number}: {l.weight??'—'} lb × {l.reps??'—'} · RPE {l.rpe??'—'} {l.done?'✓':''} {l.deleted_at?'(deleted)':''}</p>)}</details>}<div className="working-heading">Working sets</div><div className="row headings"><span>SET</span><span>LB</span><span>REPS</span><span>RPE</span><span>✓</span></div>{Array.from({length:activeExercise(ex).sets},(_,n)=>{const l=displayedLogs.find(x=>x.id===idFor(user!.id,week,workout.day,activeExercise(ex).id,n+1));return <div className="row" key={n}><b>{n+1}</b>{(['weight','reps','rpe'] as const).map(field=>field==='rpe'?<select key={field} aria-label={chosen(ex)+' RPE set '+(n+1)} value={l?.rpe??''} onChange={e=>save(activeExercise(ex),n+1,{rpe:e.target.value===''?null:Number(e.target.value)})}><option value="">—</option>{Array.from({length:10},(_,i)=><option key={i+1} value={i+1}>{i+1}</option>)}</select>:<input key={field} type="number" inputMode="decimal" aria-label={chosen(ex)+' '+field+' set '+(n+1)} placeholder={field==='weight'&&activeExercise(ex).target?String(activeExercise(ex).target):'—'} value={l?.[field]??''} onChange={e=>save(activeExercise(ex),n+1,{[field]:e.target.value===''?null:Number(e.target.value)})}/>)}<button className={l?.done?'complete':'check'} onClick={()=>save(activeExercise(ex),n+1,{done:!l?.done})}>✓</button></div>})}</section>)}{week===10&&workout.day==='Saturday'&&<section className="exercise"><h3>Day 5 • Bench Max Test</h3><p>Use a spotter and appropriate safeties. Attempt 225 lb only if preceding sets move well.</p><p>Record the warm-up sets and the 205 lb readiness single and 225 lb goal attempt above.</p></section>}</>}
 {tab==='Program'&&program.map(w=><section className="exercise" key={w.week}><h3>Week {w.week}</h3>{w.workouts.map(d=><button className="programButton" key={d.day} onClick={()=>{setWeek(w.week);setDay(d.day);setTab('Today')}}>{'Day '+(w.workouts.indexOf(d)+1)} · {d.title} →</button>)}</section>)}
 {tab==='Progress'&&<><section className="hero"><small>TRAINING COMPLETION</small><h2>{done} sets completed</h2><p>Across your logged sessions</p></section><section className="exercise"><h3>Planned heavy bench targets</h3>{program.map((w,i)=><div className="target" key={w.week}><span>Week {w.week}</span><div className="track"><div style={{width:((w.workouts[0].exercises[0].target||0)/225*100)+'%'}}/></div><b>{w.workouts[0].exercises[0].target} lb</b></div>)}<small>Planned loads, not verified personal records.</small></section></>}
 {tab==='Settings'&&<><PasswordPanel/><section className="exercise"><h3>Account & data</h3><p>{user!.email}</p><button className="action" onClick={sync}>Sync now</button><button className="action" onClick={exportBackup}>Export JSON backup</button><button className="action" onClick={()=>supabase.auth.signOut()}>Sign out</button><small>Entries are saved locally, then synchronized. Back up before clearing browser data.</small></section></>}</main><nav>{['Today','Program','Progress','Settings'].map(t=><button key={t} className={tab===t?'active':''} onClick={()=>setTab(t as TabName)}>{t}</button>)}</nav></>}

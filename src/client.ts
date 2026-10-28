@@ -10,14 +10,22 @@ class WorkoutDB extends Dexie {
 }
 export const db=new WorkoutDB();
 export const idFor=(u:string,w:number,d:DayName,e:string,s:number):string=>[u,w,d,e,s].join(':');
+export async function cloudRows<T>(table:'set_logs'|'exercise_substitutions',userId:string):Promise<T[]>{
+ const rows:T[]=[];
+ for(let offset=0;;offset+=500){
+  const {data,error}=await supabase.from(table).select('*').eq('user_id',userId).order('id').range(offset,offset+499);
+  if(error)throw error;
+  rows.push(...(data||[]) as T[]);
+  if(!data||data.length<500)return rows;
+ }
+}
 let syncing=false;
 export async function synchronize(userId:string):Promise<number|undefined>{
  if(syncing||!navigator.onLine)return;
  syncing=true;
  try{
   // Pull first: a stale local pending record must not prevent the 96 imported Week 1 rows from appearing.
-  const{data:remote,error:pullError}=await supabase.from('set_logs').select('*').eq('user_id',userId).limit(10000);
-  if(pullError)throw pullError;
+  const remote=await cloudRows<WorkoutLog>('set_logs',userId);
   let conflicts=0;
   for(const row of remote||[]){
    const local=await db.logs.get(row.id);
@@ -29,8 +37,7 @@ export async function synchronize(userId:string):Promise<number|undefined>{
     conflicts++;
    }
   }
-  const{data:remoteSubs,error:subPullError}=await supabase.from('exercise_substitutions').select('*').eq('user_id',userId).limit(10000);
-  if(subPullError)throw subPullError;
+  const remoteSubs=await cloudRows<ExerciseSubstitution>('exercise_substitutions',userId);
   for(const row of remoteSubs||[]){
    const local=await db.substitutions.get(row.id);
    if(!local||(!local.dirty&&row.updated_at>local.updated_at))await db.substitutions.put({...row,dirty:0} as ExerciseSubstitution);

@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "npm run typecheck && npm run test:program && npm run test:recommendations && vite build",
+    "build": "npm run typecheck && npm run test:program && npm run test:recommendations && node scripts/test-substitutions.mjs && vite build",
     "dev": "vite",
     "typecheck": "tsc --noEmit",
     "test:program": "node scripts/validate-program.mjs",
@@ -17,11 +17,12 @@
     "react-dom": "19.1.0"
   },
   "devDependencies": {
-    "@vitejs/plugin-react": "4.7.0",
-    "vite": "6.3.0",
-    "vite-plugin-pwa": "1.0.0",
-    "typescript": "5.8.3",
     "@types/react": "19.1.8",
-    "@types/react-dom": "19.1.6"
+    "@types/react-dom": "19.1.6",
+    "@vitejs/plugin-react": "4.7.0",
+    "esbuild": "0.25.12",
+    "typescript": "5.8.3",
+    "vite": "6.3.0",
+    "vite-plugin-pwa": "1.0.0"
   }
 }
