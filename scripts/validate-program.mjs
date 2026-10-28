@@ -51,6 +51,7 @@ for(let i=0;i<10;i++){
    if(j===0&&id==='barbell-bench-press'){sets=benchHeavy[i][0];reps=String(benchHeavy[i][1]);target=benchHeavy[i][2]}
    else if(j===4&&id==='barbell-bench-press-volume'){sets=benchVolume[i][0];reps=String(benchVolume[i][1]);target=benchVolume[i][2]}
    else if(i===8){sets=(j===1&&id==='barbell-back-squat')||(j===3&&['conventional-deadlift','back-extension'].includes(id))? (id==='back-extension'?2:(id==='barbell-back-squat'?3:2)):Math.max(1,sets-1)}
+   if(i>=1&&j===2&&id==='rkc-plank'){sets=3;reps='10–12'}
    return [id,sets,reps,target];
   });
   const actual=workout.exercises.map(e=>[e.id,e.sets,e.reps,e.target]);
@@ -61,6 +62,11 @@ for(let i=0;i<10;i++){
   count+=actual.length;
  }
  assert.deepEqual(warmupSchedule[i],warmups[i],`Week ${i+1} warm-up mismatch`);
+}
+for(let i=0;i<9;i++){
+ const ex=program[i].workouts[2].exercises;
+ assert.equal(ex[1].name,i===0?'Dumbbell Floor Press':'Dumbbell Chest Press');
+ assert.equal(ex[5].name,i===0?'RKC Plank':'Cable Biceps Curl');
 }
 assert.equal(program[0].workouts[4].exercises[0].id,'barbell-bench-press-volume');
 console.log(`Validated all 10 workbook weeks, 50 workout days, ${count} exercise prescriptions, all warm-ups, Week 9 taper, Week 10 max test and stable IDs.`);

@@ -15,11 +15,13 @@ const groups:Record<string,string[]>={
  'Standing Calf Raise':['Seated Calf Raise','Leg Press Calf Raise','Single-Leg Calf Raise'],
  'Cable Crunch':['Machine Ab Crunch','Decline Sit-Up','Reverse Crunch'],
  'Machine Chest Press':['Dumbbell Bench Press','Smith Machine Chest Press','Cable Chest Press'],
- 'Dumbbell Floor Press':['Flat Dumbbell Press','Close-Grip Bench Press','Machine Chest Press'],
+ 'Dumbbell Floor Press':['Dumbbell Chest Press','Flat Dumbbell Press','Close-Grip Bench Press','Machine Chest Press'],
  'Seated Dumbbell Shoulder Press':['Machine Shoulder Press','Standing Barbell Press','Landmine Press'],
  'Cable Serratus Punch':['Dumbbell Serratus Punch','Scapular Wall Slide','Cable Press'],
  'Overhead Triceps Extension':['Cable Overhead Triceps Extension','Dumbbell Skull Crusher','Rope Pushdown'],
- 'RKC Plank':['Forearm Plank','Hollow-Body Hold','Dead Bug'],
+ 'Dumbbell Chest Press':['Dumbbell Floor Press','Flat Dumbbell Press','Machine Chest Press'],
+ 'Cable Biceps Curl':['Dumbbell Biceps Curl','EZ-Bar Curl','RKC Plank'],
+ 'RKC Plank':['Cable Biceps Curl','Forearm Plank','Hollow-Body Hold','Dead Bug'],
  'Conventional Deadlift':['Trap-Bar Deadlift','Sumo Deadlift','Rack Pull'],
  'Romanian Deadlift':['Dumbbell Romanian Deadlift','Single-Leg Romanian Deadlift','Good Morning'],
  'Chest-Supported Row':['Seated Cable Row','Machine Row','Incline Dumbbell Row'],
@@ -37,5 +39,18 @@ const groups:Record<string,string[]>={
 };
 export function alternativeExercises(exercise:Exercise):string[]{
  const options=groups[exercise.name]||['Dumbbell Variation','Machine Variation','Cable Variation'];
- return [exercise.name,...options];
+ return [...new Set([exercise.name,...(exercise.originalName?[exercise.originalName]:[]),...options])];
+}
+
+// Choice rows always reference the original program slot. Never rename or copy set logs.
+export function resolveExercise(exercise:Exercise,replacement=exercise.name):Exercise {
+ const original=exercise.originalName||exercise.name;
+ const reps=replacement==='Cable Biceps Curl'?'10–12':exercise.originalReps||exercise.reps;
+ const sets=replacement==='Cable Biceps Curl'&&exercise.id==='rkc-plank'?3:exercise.sets;
+ if(replacement===original)return {...exercise,name:replacement,reps,sets};
+ return {...exercise,name:replacement,reps,sets,target:null,
+  id:exercise.id+'--sub--'+replacement.toLowerCase().replace(/[^a-z0-9]+/g,'-')};
+}
+export function substitutionWeeks(program:import('./types').TrainingWeek[],week:number,day:import('./types').DayName,id:string,future:boolean):number[]{
+ return program.filter(w=>w.week>=week&&(future||w.week===week)&&w.workouts.some(d=>d.day===day&&d.exercises.some(e=>e.id===id))).map(w=>w.week);
 }
