@@ -21,6 +21,8 @@ export function WorkoutHUD({userId,week,day,exercises,logs,save,onSwap,onOvervie
  const choices=includeWarmups?exercises.flatMap(ex=>ex.id===mainId?[{...ex,id:ex.id+'-warmup',name:ex.name+' warm-up',sets:prescribedWarmups.length},ex]:[ex]):exercises;
  const swipeY=useRef<number|null>(null);
  const [selected,setSelected]=useState<string|null>(null),[editing,setEditing]=useState<number|null>(null),[plateOpen,setPlateOpen]=useState(false),[failure,setFailure]=useState(''),[saving,setSaving]=useState(false);
+ const identity=exercises.map(ex=>ex.id).join('|');
+ useEffect(()=>{setSelected(null);setEditing(null)},[identity]);
  const rows=(ex:Exercise)=>logs.filter(l=>l.week===week&&l.day===day&&l.exercise_id===ex.id&&!l.deleted_at);
  const retired=(ex:Exercise,n:number)=>logs.some(l=>l.week===week&&l.day===day&&l.exercise_id===ex.id&&l.set_number===n&&!!l.deleted_at);
  const next=choices.find(ex=>Array.from({length:ex.sets},(_,i)=>i+1).some(n=>!retired(ex,n)&&!rows(ex).some(l=>l.set_number===n&&l.done)));
