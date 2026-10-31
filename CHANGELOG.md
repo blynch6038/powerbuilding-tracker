@@ -2,6 +2,10 @@
 
 Reconstructed from the repository's complete reachable commit history through October 28, 2026. All timestamps below are commit timestamps in America/New_York (EDT, UTC−04:00), not installation or release dates. Implementation and merge commits are listed separately so every recorded change remains traceable. Commit descriptions describe the recorded work; they do not independently establish device installation or live acceptance.
 
+## 2026-10-30 — Web update visibility
+
+Added a Performance HUD v1.1 label and a refresh notice when a newer deployed bundle or service worker is detected. Checks run on return to the app and every five minutes while visible. Refresh waits for an installing worker when possible. Workout storage and pending edits are not cleared. Updated the browser theme-color to charcoal.
+
 ## 2026-10-30 — Performance HUD and workout tools
 
 - Charcoal and orange Performance HUD across workout, program, and progress screens; current-set ring and clear load/reps.

@@ -2,3 +2,5 @@
 dialog.hud-sheet{position:fixed;inset:auto 0 0;margin:0 auto;color:#f6f4ef}dialog.hud-sheet::backdrop{background:#000b}dialog.hud-sheet input{border-bottom:1px solid #777}dialog.hud-sheet label{display:block;clear:both}dialog.hud-sheet button{min-width:44px}@media(min-width:900px){dialog.hud-sheet{inset:0;margin:auto}}
 
 @property --progress{syntax:'<percentage>';inherits:false;initial-value:0%}.set-ring{transition:--progress .3s ease}
+
+.version-label{font-size:10px;letter-spacing:1.5px;color:#ff9b55;margin-bottom:14px}.update-notice{padding:14px;border:1px solid #ff781f;border-radius:14px;display:flex;align-items:center;gap:12px;background:#29211c;margin-bottom:18px;font-size:13px}.update-notice button{background:#ff781f;border-radius:10px;padding:12px;color:#111;font-weight:700;flex-shrink:0}
