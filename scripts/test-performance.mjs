@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {build} from 'esbuild';
+const built=await build({entryPoints:['src/performance.ts'],bundle:true,platform:'node',format:'esm',write:false});
+const {plates,estimatedMax,previousSession,loaded}=await import('data:text/javascript;base64,'+Buffer.from(built.outputFiles[0].text).toString('base64'));
+assert.deepEqual(plates(135),{result:[{plate:45,count:1}],remainder:0});assert.equal(plates(137).remainder,2);assert.deepEqual(plates(45).result,[]);assert.equal(plates(40),null);assert.equal(plates(NaN),null);
+assert.equal(estimatedMax(225,1),225);assert.equal(estimatedMax(135,8),171);assert.equal(estimatedMax(135,11),null);assert.equal(estimatedMax(0,8),null);
+const row={id:'a',user_id:'test',week:1,day:'Monday',exercise_id:'barbell-bench-press',set_number:1,weight:135,reps:8,rpe:8,done:true,deleted_at:null,updated_at:'2030-01-01',dirty:0};
+const rows=[row,{...row,id:'b',week:2,weight:140},{...row,id:'c',week:3,weight:145},{...row,id:'d',week:2,exercise_id:'other',weight:200},{...row,id:'e',week:2,deleted_at:'deleted',weight:300}];
+assert.deepEqual(previousSession(rows,row.exercise_id,3,'Monday').map(l=>l.id),['b']);assert.equal(loaded(row),true);assert.equal(loaded({...row,exercise_id:row.exercise_id+'-warmup'}),false);assert.equal(loaded({...row,deleted_at:'deleted'}),false);
+console.log('Performance math passed: plate balance and remainder, estimate limits, program chronology, exercise isolation, deleted and warm-up exclusion.');

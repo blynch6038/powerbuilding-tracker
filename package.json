@@ -4,12 +4,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "npm run typecheck && npm run test:program && npm run test:recommendations && node scripts/test-substitutions.mjs && node scripts/test-notes.mjs && vite build",
+    "build": "npm run typecheck && npm run test:program && npm run test:recommendations && node scripts/test-substitutions.mjs && node scripts/test-notes.mjs && node scripts/test-performance.mjs && vite build",
     "dev": "vite",
     "typecheck": "tsc --noEmit",
     "test:program": "node scripts/validate-program.mjs",
     "test:recommendations": "node scripts/test-recommendations.mjs",
-    "test:notes": "node scripts/test-notes.mjs"
+    "test:notes": "node scripts/test-notes.mjs",
+    "test:performance": "node scripts/test-performance.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.57.0",
