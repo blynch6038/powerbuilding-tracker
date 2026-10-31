@@ -1,7 +1,6 @@
 import AppUpdate from './AppUpdate';
 import HUDDialog from './HUDDialog';
 import {WorkoutHUD,WorkoutRecap,GoalProgress,ExerciseProgress} from './PerformanceHUD';
-import './hud.css';
 import {ExerciseNotes} from './ExerciseNotes';
 import React,{useEffect,useState} from 'react';
 import type {User} from '@supabase/supabase-js';
@@ -18,6 +17,8 @@ import AppErrorBoundary from './AppErrorBoundary';
 import {alternativeExercises,canonicalExerciseName,resolveExercise,substitutionWeeks} from './substitutions';
 import {readWorkoutSelection,rememberWorkoutSelection} from './workoutSelection';
 import {recommendWeight} from './recommendations';
+// Keep the theme after all base/component CSS in the production bundle.
+import './hud.css';
 const dayLabel=(day:DayName):string=>({Monday:'Day 1',Tuesday:'Day 2',Wednesday:'Day 3',Thursday:'Day 4',Friday:'Day 5',Saturday:'Day 6'})[day]||day;
 const historyExerciseName=(ex:Exercise,id:string)=>id===ex.id?canonicalExerciseName(ex.originalName||ex.name):id.split('--sub--').slice(1).join('--sub--').replace(/-/g,' ').replace(/^flat dumbbell press$/i,'Dumbbell Chest Press');
 function App(){
