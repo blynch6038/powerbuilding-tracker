@@ -1,0 +1,2 @@
+import React,{useEffect,useRef} from 'react';
+export default function HUDDialog({title,onClose,children}:{title:string;onClose:()=>void;children:React.ReactNode}){const ref=useRef<HTMLDialogElement>(null);useEffect(()=>{const dialog=ref.current!;dialog.showModal();return()=>dialog.close()},[]);return <dialog ref={ref} className="hud-sheet" aria-label={title} onCancel={e=>{e.preventDefault();onClose()}}><button autoFocus className="close" onClick={onClose}>Done</button><h2>{title}</h2>{children}</dialog>}

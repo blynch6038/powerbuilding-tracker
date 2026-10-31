@@ -2,6 +2,19 @@
 
 Reconstructed from the repository's complete reachable commit history through October 28, 2026. All timestamps below are commit timestamps in America/New_York (EDT, UTC−04:00), not installation or release dates. Implementation and merge commits are listed separately so every recorded change remains traceable. Commit descriptions describe the recorded work; they do not independently establish device installation or live acceptance.
 
+## 2026-10-30 — Performance HUD and workout tools
+
+- Charcoal and orange Performance HUD across workout, program, and progress screens; current-set ring and clear load/reps.
+- Prior-session comparison by program chronology, not edit time; exercise identities and substitutions stay separate.
+- Automatic 90-second rest after successfully saving a newly completed set, with +30 seconds, skip, and device-local deadline restoration.
+- Completed-set shortcuts, editing, exercise-note previews, and workout overview with reordering. Swipe up on the set ring or use the overview button.
+- Barbell plate calculator with configurable bar weight and unmatched-load indication; calculations do not change recorded set weights.
+- Session recap with working sets, loaded repetition volume, earlier-session comparison, and exercise load records.
+- Bench goal view separates Epley estimated strength from recorded singles toward 225 lb. Estimates use 1–10 reps; warm-ups and deleted records are excluded.
+- Device-supported completion/timer haptics and existing device-save/sync indicators. Exercise order and rest deadlines remain local to each device and account.
+
+Validation: web TypeScript, production/PWA build, existing program/recommendation/substitution/notes checks, new performance calculation tests, and isolated interactive HUD checks. Full browser visual verification could not run because the browser cannot reach the local preview. Native Xcode build and contract checks run in the repository's macOS workflow; see the PR checks for their result. Native installation requires rebuilding the app in Xcode.
+
 ## 2026-10-28 — Documentation maintenance
 
 Added this dated, commit-linked history; linked documentation from the README; corrected stale documentation and distinguished historical validation from current implementation status. This documentation-only update changes no application code or database schema.
