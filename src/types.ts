@@ -1,5 +1,5 @@
 export type DayName='Monday'|'Tuesday'|'Wednesday'|'Thursday'|'Friday'|'Saturday';
-export type TabName='Today'|'Program'|'Progress'|'Settings';
+export type TabName='Today'|'Program'|'Progress'|'History'|'Settings';
 export interface Exercise {id:string;name:string;sets:number;reps:string;target:number|null;originalName?:string;originalReps?:string}
 export interface Workout {day:DayName;title:string;exercises:Exercise[]}
 export interface TrainingWeek {week:number;workouts:Workout[]}

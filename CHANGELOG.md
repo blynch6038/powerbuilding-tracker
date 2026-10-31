@@ -2,6 +2,14 @@
 
 Reconstructed from the repository's complete reachable commit history through October 28, 2026. All timestamps below are commit timestamps in America/New_York (EDT, UTC−04:00), not installation or release dates. Implementation and merge commits are listed separately so every recorded change remains traceable. Commit descriptions describe the recorded work; they do not independently establish device installation or live acceptance.
 
+## 2026-10-31 — Web-only bulk history editor
+
+Added a History tab (`/#history`) for past-workout corrections. Filter by week, training day, exercise text and completion; optionally include warm-ups or unlogged planned sets for a selected week. Edit individual weights/reps/RPE/completion or apply values and exercise corrections to selected visible rows. Drafts persist while switching tabs; before/after review and explicit save apply to all changed rows, including filtered-out drafts.
+
+Numeric edits retain set IDs. Exercise corrections create the corrected exercise's set IDs and retain the source entries as incomplete to prevent double-counting; only the selected workout's exercise choice changes. Existing targets, deleted records, stale local/cloud data and changed exercise choices block the batch. Corrections append audit notes and save atomically in IndexedDB, then use existing sync. Separate server writes can sync progressively; keep the app open until the sync indicator clears. No iOS source or backend schema changes.
+
+Validation: TypeScript, existing regression checks, new bulk-history transaction tests (rollback, stale checks, account isolation, collisions, new entries and offline restart), production/PWA build and theme check.
+
 ## 2026-10-30 — Correct web theme cascade
 
 Fixed the production CSS order: the legacy blue stylesheet had been overriding the Performance HUD theme. Base controls, warm-ups, recommendations, selectors, login and password forms now use shared charcoal/orange theme variables. HUD CSS loads after component styles. This corrects the deployed theme rather than relying on cache clearing.
