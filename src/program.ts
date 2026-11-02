@@ -7,7 +7,7 @@ const volume=[[4,8,135],[4,8,140],[4,7,145],[4,6,150],[4,6,150],[4,5,155],[3,5,1
 export const benchHeavy=heavy.map(x=>x[2]);
 export const benchVolume=volume.map(x=>x[2]);
 const idFor=(name:string)=>name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
-function exercise(name:string,sets:number,reps:string,target:number|null=null):Exercise{const display=canonicalExerciseName(name==='Conventional Deadlift'?'Trap Bar Deadlift':name);return{id:idFor(name),name:display,sets,reps,target,...(display!==name?{originalName:name}:{})}}
+function exercise(name:string,sets:number,reps:string,target:number|null=null):Exercise{const display=canonicalExerciseName(name==='Conventional Deadlift'?'Trap Bar Deadlift':name==='Standing Calf Raise'?'Machine Seated Calf Raise':name);return{id:idFor(name),name:display,sets,reps,target,...(display!==name?{originalName:name}:{})}}
 function plannedDay(day:DayName,title:string,items:Exercise[]):Workout{return{day,title,exercises:items}}
 function baseItems(i:number,j:number):Exercise[]{
  return exerciseDays[j].map(([name,sets,reps])=>{

@@ -81,3 +81,13 @@ assert.equal(resolveExercise(program[0].workouts[2].exercises[0]).id,'machine-ch
 assert.deepEqual(substitutionWeeks(program,2,'Wednesday',machine.id,true),[2,3,4,5,6,7,8,9]);
 
 assert.equal(canonicalExerciseName('forgex wide chest press'),'FORGEX WIDE CHEST PRESS');
+
+for (const week of program) {
+ const calf=week.workouts.find(w=>w.day==='Tuesday').exercises.find(e=>e.id==='standing-calf-raise');
+ assert.equal(calf.name,'Machine Seated Calf Raise');
+ assert.equal(resolveExercise(calf).id,'standing-calf-raise--sub--machine-seated-calf-raise');
+ assert.equal(resolveExercise(calf,'Seated Calf Raise').id,resolveExercise(calf).id);
+ assert.equal(calf.sets,week.week===10?0:week.week===9?2:3);
+ assert.equal(calf.reps,'12–15');
+ assert(alternativeExercises(calf).includes('Machine Seated Calf Raise'));
+}

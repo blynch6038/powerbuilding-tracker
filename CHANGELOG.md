@@ -1,5 +1,10 @@
 # Power Builder web change log
 
+## 2026-11-02 — Machine Seated Calf Raise throughout the block
+
+All scheduled calf raises now default to Machine Seated Calf Raise. The original program slot stays stable and active logs use the existing machine-seated substitution identity, keeping recorded history and recommendations aligned. Seated Calf Raise is a name alias for the same machine exercise. Sets, reps and taper exclusions are preserved. Existing account history was verified already to contain only the six machine-seated calf sets; all ten weekly choices now use this exercise.
+
+
 Reconstructed from the repository's complete reachable commit history through October 28, 2026. All timestamps below are commit timestamps in America/New_York (EDT, UTC−04:00), not installation or release dates. Implementation and merge commits are listed separately so every recorded change remains traceable. Commit descriptions describe the recorded work; they do not independently establish device installation or live acceptance.
 
 ## 2026-11-02 — Match bench progression reference

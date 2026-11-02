@@ -12,7 +12,8 @@ const groups:Record<string,string[]>={
  'Hack Squat Machine':['Leg Press','Front Squat','Smith Machine Squat','Belt Squat'],
  'Leg Press':['Hack Squat Machine','Belt Squat','Goblet Squat'],
  'Seated Leg Curl':['Lying Leg Curl','Standing Leg Curl','Nordic Hamstring Curl'],
- 'Standing Calf Raise':['Seated Calf Raise','Leg Press Calf Raise','Single-Leg Calf Raise'],
+ 'Machine Seated Calf Raise':['Leg Press Calf Raise','Single-Leg Calf Raise'],
+ 'Standing Calf Raise':['Machine Seated Calf Raise','Leg Press Calf Raise','Single-Leg Calf Raise'],
  'Cable Crunch':['Machine Ab Crunch','Decline Sit-Up','Reverse Crunch'],
  'Machine Chest Press':['FORGEX WIDE CHEST PRESS','Dumbbell Bench Press','Smith Machine Chest Press','Cable Chest Press'],
  'Dumbbell Floor Press':['Dumbbell Chest Press','Flat Dumbbell Press','Close-Grip Bench Press','Machine Chest Press'],
@@ -49,7 +50,7 @@ export function alternativeExercises(exercise:Exercise):string[]{
 export function resolveExercise(exercise:Exercise,replacement=exercise.name):Exercise {
  // Display the requested singular name while retaining existing curl log identities.
  const displayName=canonicalExerciseName(replacement);
- const identityName=displayName==='Cable Bicep Curl'?'Cable Biceps Curl':displayName==='Chest-Supported Dumbbell Row'?'Chest-Supported Row':replacement;
+ const identityName=displayName==='Machine Seated Calf Raise'?'Machine Seated Calf Raise':displayName==='Cable Bicep Curl'?'Cable Biceps Curl':displayName==='Chest-Supported Dumbbell Row'?'Chest-Supported Row':replacement;
  const original=exercise.originalName||exercise.name;
  const reps=identityName==='Cable Biceps Curl'?'10–12':exercise.originalReps||exercise.reps;
  const sets=identityName==='Cable Biceps Curl'&&exercise.id==='rkc-plank'?3:exercise.sets;

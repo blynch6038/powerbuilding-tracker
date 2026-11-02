@@ -2,6 +2,7 @@
 export function canonicalExerciseName(name:string):string {
  const aliases:Record<string,string>={
   'machine seated calf raise':'Machine Seated Calf Raise',
+  'seated calf raise':'Machine Seated Calf Raise',
   'dumbbell chest press':'Dumbbell Chest Press',
   'flat dumbbell press':'Dumbbell Chest Press',
   'dumbbell floor press':'Dumbbell Chest Press',
