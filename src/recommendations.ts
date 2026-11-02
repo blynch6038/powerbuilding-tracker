@@ -1,5 +1,6 @@
 import type {DayName,Exercise,WorkoutLog} from './types';
 import {program} from './program';
+import {isDumbbellExercise} from './loadConvention';
 
 export type Recommendation={weight:number|null;status:'plan'|'increase'|'hold'|'caution'|'none';reason:string;previous:string|null;isBenchGoal:boolean};
 const benchGoalIds=new Set(['barbell-bench-press','barbell-bench-press-volume']);
@@ -43,8 +44,9 @@ export function recommendWeight(week:number,day:DayName,exercise:Exercise,allLog
  if(maxRpe===0)return {weight:roundTo(lastLoad,5),status:'hold',reason:'No valid RPE recorded. Repeat the prior weight until effort is logged.',previous,isBenchGoal:false};
  if(maxRpe>=9)return {weight:roundTo(lastLoad,5),status:'hold',reason:'High RPE: repeat this weight rather than increasing.',previous,isBenchGoal:false};
  if(maxRpe>=8)return {weight:roundTo(lastLoad,5),status:'hold',reason:'RPE 8: maintain the weight and confirm solid form/recovery before progressing.',previous,isBenchGoal:false};
- const step=lastLoad<=50?2.5:5;
+ const dumbbell=isDumbbellExercise(exercise.id);
+ const step=dumbbell?5:lastLoad<=50?2.5:5;
  const suggested=roundTo(lastLoad+step,step);
- return {weight:suggested,status:'increase',reason:`All planned reps completed at max RPE ${maxRpe}. Based on your last completed set (${lastLoad} lb), consider ${suggested} lb (${suggested-lastLoad} lb increase after rounding) if equipment allows.`,previous,isBenchGoal:false};
+ return {weight:suggested,status:'increase',reason:`All planned reps completed at max RPE ${maxRpe}. Based on your last completed set (${lastLoad} lb), consider ${suggested} lb (${suggested-lastLoad} lb${dumbbell?' per dumbbell':''} increase after rounding) if equipment allows.`,previous,isBenchGoal:false};
 }
 

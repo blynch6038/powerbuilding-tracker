@@ -1,5 +1,10 @@
 # Power Builder web change log
 
+## 2026-11-02 — Five-pound dumbbell progression
+
+Dumbbell recommendations now increase by 5 lb per dumbbell when the previous session qualifies for progression, including chest-supported dumbbell rows and dumbbell substitutions. For example, 40 lb recommends 45 lb and 45 lb recommends 50 lb. Last-set baselines and RPE/completion checks remain in effect; barbell/machine substitutions retain their own increment rules. Logged history is unchanged.
+
+
 ## 2026-11-02 — Machine Seated Calf Raise throughout the block
 
 All scheduled calf raises now default to Machine Seated Calf Raise. The original program slot stays stable and active logs use the existing machine-seated substitution identity, keeping recorded history and recommendations aligned. Seated Calf Raise is a name alias for the same machine exercise. Sets, reps and taper exclusions are preserved. Existing account history was verified already to contain only the six machine-seated calf sets; all ten weekly choices now use this exercise.

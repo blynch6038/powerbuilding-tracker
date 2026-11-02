@@ -51,7 +51,7 @@ const partial=recommendWeight(3,'Tuesday',squat,ramped.slice(0,3));
 assert.equal(partial.status,'caution');assert.equal(partial.weight,155);
 const dbPress=ex('incline-dumbbell-press','Incline Dumbbell Press',3,'8');
 const dbRamped=sets('Monday',dbPress.id,3,35,8,7).map((r,i)=>({...r,weight:[35,40,45][i]}));
-assert.equal(recommendWeight(2,'Monday',dbPress,dbRamped).weight,47.5);
+assert.equal(recommendWeight(2,'Monday',dbPress,dbRamped).weight,50);
 const varyingReps=ramped.map(r=>({...r,reps:r.set_number===4?6:5}));
 assert.match(recommendWeight(3,'Tuesday',squat,varyingReps).previous,/175 lb × 6 reps/);
 const benchRamp=sets('Monday','barbell-bench-press',5,135,5,9).map((r,i)=>({...r,weight:[135,145,155,165,175][i]}));
@@ -60,3 +60,23 @@ assert.equal(recommendWeight(2,'Monday',bench,benchRamp).weight,175);
 assert.equal(recommendWeight(2,'Monday',bench,benchRamp.map(r=>({...r,rpe:7}))).weight,180);
 assert.equal(recommendWeight(10,'Monday',{...bench,target:135},benchRamp).weight,135);
 console.log('Last-set baselines passed: squat ramp 175→180, backoff order, edits, exclusions, RPE/completion checks, dumbbell increments, reps and bench plan protections.');
+
+// Dumbbell equipment uses 5 lb per-dumbbell increments, including substituted movements and rows.
+for (const [id,day,count,reps] of [
+ ['incline-dumbbell-press','Monday',3,8],
+ ['seated-dumbbell-shoulder-press','Wednesday',3,10],
+ ['chest-supported-row','Thursday',3,10],
+ ['dumbbell-floor-press--sub--dumbbell-chest-press','Wednesday',3,8],
+ ['seated-cable-row--sub--single-arm-dumbbell-row','Monday',3,10]
+]) {
+ for(const weight of [10,35,40,45,50,55]) {
+  const exercise=ex(id,id,count,String(reps));
+  const rows=sets(day,id,count,weight,reps,7);
+  const advice=recommendWeight(2,day,exercise,rows);
+  assert.equal(advice.weight,weight+5);
+  assert.match(advice.reason,/5 lb per dumbbell increase/);
+  assert.equal(recommendWeight(2,day,exercise,rows.map(r=>({...r,rpe:8}))).weight,weight);
+ }
+}
+const barbellSub='incline-dumbbell-press--sub--incline-barbell-press';
+assert.equal(recommendWeight(2,'Monday',ex(barbellSub,'Incline Barbell Press',3,'8'),sets('Monday',barbellSub,3,40,8,7)).weight,42.5);
