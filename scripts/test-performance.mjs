@@ -22,3 +22,8 @@ assert.equal(setVolume({...dumbbell,exercise_id:'incline-dumbbell-press--sub--in
 assert.equal(setVolume({...row,exercise_id:'seated-cable-row--sub--single-arm-dumbbell-row',weight:45,reps:10}),900);
 for(const patch of [{done:false},{deleted_at:'today'},{weight:0},{weight:null}])assert.equal(setVolume({...dumbbell,...patch}),0);
 assert.equal(setVolume({...dumbbell,exercise_id:'farmer-carry'}),0);
+
+const supported={...row,week:1,day:'Thursday',exercise_id:'chest-supported-row',weight:40,reps:10};
+assert.equal(setVolume(supported),800);
+assert.equal(setVolume({...supported,exercise_id:'chest-supported-row--sub--machine-row'}),400);
+assert.equal(setVolume({...supported,exercise_id:'chest-supported-row--sub--single-arm-dumbbell-row'}),800);

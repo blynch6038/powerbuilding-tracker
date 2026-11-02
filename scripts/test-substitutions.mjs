@@ -64,3 +64,10 @@ assert.equal(canonicalExerciseName('bird dog'),'Bird Dog');
 assert.equal(canonicalExerciseName('single-arm dumbbell row'),'Single-Arm Dumbbell Row');
 assert.equal(resolveExercise(slot,'Cable Bicep Curl').id,'rkc-plank--sub--cable-biceps-curl');
 assert.equal(resolveExercise(slot,'Cable Bicep Curl').reps,'10–12');
+
+const supported=program[0].workouts[3].exercises.find(e=>e.id==='chest-supported-row');
+assert.equal(resolveExercise(supported).name,'Chest-Supported Dumbbell Row');
+assert.equal(resolveExercise(supported).id,'chest-supported-row');
+assert.equal(resolveExercise(supported,'Chest-Supported Row').id,'chest-supported-row');
+assert.equal(resolveExercise(supported,'Machine Row').id,'chest-supported-row--sub--machine-row');
+assert.equal(canonicalExerciseName('chest-supported-row'),'Chest-Supported Dumbbell Row');

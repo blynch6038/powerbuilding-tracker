@@ -2,6 +2,12 @@
 
 Reconstructed from the repository's complete reachable commit history through October 28, 2026. All timestamps below are commit timestamps in America/New_York (EDT, UTC−04:00), not installation or release dates. Implementation and merge commits are listed separately so every recorded change remains traceable. Commit descriptions describe the recorded work; they do not independently establish device installation or live acceptance.
 
+## 2026-11-02 — Chest-supported row uses dumbbell load convention
+
+Chest-Supported Row displays as Chest-Supported Dumbbell Row. Its existing log identity and saved weights remain unchanged. Weight fields show pounds per dumbbell; workout/progress volume counts both arms. The original slot and explicit legacy row choices resolve to the same IDs. Machine Row substitutions retain total-weight calculation.
+
+Validation: legacy identity and name tests, 40 lb × 10 × 2 = 800 lb per-set volume, machine replacement exclusion, full web build and web/iOS parity. Native contracts and simulator build run in CI.
+
 ## 2026-11-02 — Exercise capitalization and dumbbell load convention
 
 Exercise names consistently capitalize each word. Cable Biceps Curl displays as Cable Bicep Curl while retaining existing cable-biceps-curl log identities; Bird Dog and custom names follow the same capitalization rules.
