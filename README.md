@@ -42,3 +42,5 @@ The default deadlift is Trap-Bar Deadlift. Flat Dumbbell Press is displayed as D
 Record the weight of one dumbbell and repetitions per arm. Volume counts both arms: 45 lb × 10 reps × 2 = 900 lb. Barbell and machine weights remain total load. Weight charts, recommendations and PRs use the entered per-dumbbell value. Saved history is not automatically halved; correct any earlier combined-weight entries through History.
 
 Farmer Carry uses pounds per hand and distance in meters; 50 lb means 50 lb in each hand. Carries remain excluded from lifting-volume totals.
+
+Weight recommendations use the last completed working set from the prior matching exercise session (highest set number), rather than the average. Completion and maximum session RPE checks still apply. Programmed bench progression and Week 10 protections remain in effect.

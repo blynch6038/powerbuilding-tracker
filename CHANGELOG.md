@@ -2,6 +2,14 @@
 
 Reconstructed from the repository's complete reachable commit history through October 28, 2026. All timestamps below are commit timestamps in America/New_York (EDT, UTC−04:00), not installation or release dates. Implementation and merge commits are listed separately so every recorded change remains traceable. Commit descriptions describe the recorded work; they do not independently establish device installation or live acceptance.
 
+## 2026-11-02 — Recommendations use the last working set
+
+Removed session-average weights from recommendations. Every exercise now uses the highest-numbered completed loaded set from its prior matching session as the weight baseline, including bench hold/caution calculations. The prior-session summary shows that set's actual weight, reps and set number. Editing an earlier set or receiving records in a different order does not change the selection. Increase text states the suggested load and actual increase after rounding.
+
+Session completion and maximum valid RPE checks remain in place. Programmed heavy/volume bench progression and the fixed Week 10 taper/test protections remain unchanged. Warm-ups, deleted rows, incomplete rows and other exercise identities do not replace the last completed working set. Saved history is unchanged.
+
+Validation: 140/140/155/175 lb squat produces 180 lb, decreasing final sets, unsorted/edited rows, drafts/deletions/warm-ups, missing/high RPE, incomplete sessions, dumbbell increments, accurate rep summaries and bench-plan protections. Full web build, bundled web/iOS parity and native bridge contracts cover the change.
+
 ## 2026-11-02 — Correct machine name to FORGEX WIDE CHEST PRESS
 
 Replaced the Arsenal Strength Reloaded Vertical Chest Press option with FORGEX WIDE CHEST PRESS, including exact requested capitalization. Corrected account history and Week 2 onward selections use the FORGEX identity while Week 1 remains Machine Chest Press. Set values are preserved, and the corrected machine remains independent of the Week 1 machine for progress and recommendations.
