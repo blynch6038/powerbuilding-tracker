@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {build} from 'esbuild';
 const built=await build({entryPoints:['src/performance.ts'],bundle:true,platform:'node',format:'esm',write:false});
-const {plates,estimatedMax,previousSession,loaded,setVolume,weeklyProgress}=await import('data:text/javascript;base64,'+Buffer.from(built.outputFiles[0].text).toString('base64'));
+const {plates,estimatedMax,previousSession,loaded,setVolume,weeklyProgress,benchPlan}=await import('data:text/javascript;base64,'+Buffer.from(built.outputFiles[0].text).toString('base64'));
 assert.deepEqual(plates(135),{result:[{plate:45,count:1}],remainder:0});assert.equal(plates(137).remainder,2);assert.deepEqual(plates(45).result,[]);assert.equal(plates(40),null);assert.equal(plates(NaN),null);
 assert.equal(estimatedMax(225,1),225);assert.equal(estimatedMax(135,8),171);assert.equal(estimatedMax(135,11),null);assert.equal(estimatedMax(0,8),null);
 const row={id:'a',user_id:'test',week:1,day:'Monday',exercise_id:'barbell-bench-press',set_number:1,weight:135,reps:8,rpe:8,done:true,deleted_at:null,updated_at:'2030-01-01',dirty:0};
@@ -53,3 +53,9 @@ const heavyAndVolume=weeklyProgress([chartBench,{...chartBench,id:'volume-bench'
 assert.equal(heavyAndVolume[0].benchLoad,190);
 assert.equal(weeklyProgress([{...chartBench,weight:182.5}],row.user_id)[0].benchLoad,182.5);
 assert.equal(weeklyProgress([{...chartBench,week:2,weight:175},chartBench],row.user_id)[1].benchLoad,175);
+
+assert.deepEqual(benchPlan('test').map(point=>point.weight),[155,160,165,170,175,180,185,190,195,225]);
+const benchChoice={id:'choice',user_id:'test',week:2,day:'Monday',exercise_id:'barbell-bench-press',replacement:'Dumbbell Bench Press',updated_at:'today',dirty:0};
+assert.equal(benchPlan('test',[benchChoice])[1].weight,140);
+assert.equal(benchPlan('other',[benchChoice])[1].weight,160);
+assert.equal(benchPlan('test',[benchChoice,{...benchChoice,id:'volume-choice',day:'Friday',exercise_id:'barbell-bench-press-volume'}])[1].weight,null);

@@ -46,3 +46,5 @@ Farmer Carry uses pounds per hand and distance in meters; 50 lb means 50 lb in e
 Weight recommendations use the last completed working set from the prior matching exercise session (highest set number), rather than the average. Completion and maximum session RPE checks still apply. Programmed bench progression and Week 10 protections remain in effect.
 
 Progress summary charts show weekly Bench Estimated 1RM, Working Volume and Average Actual RPE from completed recorded history. Estimated maxes discard decimals without rounding up (209.6 lb becomes 209 lb); actual logged weights keep their precision. Web charts include current values and expandable data tables.
+
+Bench Progression overlays the weekly prescribed Plan (blue line) and highest completed Actual bench load (green points). Future targets remain Plan values; weeks without completed bench history have no Actual point. Active substitutions stay separate. The chart includes current recorded weight, weight labels, a legend and an expandable Plan/Actual table.

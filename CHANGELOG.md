@@ -2,6 +2,12 @@
 
 Reconstructed from the repository's complete reachable commit history through October 28, 2026. All timestamps below are commit timestamps in America/New_York (EDT, UTC−04:00), not installation or release dates. Implementation and merge commits are listed separately so every recorded change remains traceable. Commit descriptions describe the recorded work; they do not independently establish device installation or live acceptance.
 
+## 2026-11-02 — Match bench progression reference
+
+Bench Progression now matches the supplied reference: charcoal rounded card, current recorded weight, blue Plan line and labeled points, green Actual points, right-side pounds axis, dashed weekly grid, and Plan/Actual legend. Plan is the highest active prescribed bench load each week across heavy/volume bench and readiness/goal singles; Week 10 shows the 225 lb goal. Actual points use completed history only, and future weeks remain empty for Actual. Substitutions stay independent and account-scoped. Planned values are clearly separated from recorded history and are not added to the database.
+
+Validation: visual inspection of the rendered chart; the 155/160/165/170/175/180/185/190/195/225 plan sequence; actual points only for recorded weeks; active substitutions/account isolation; accessible Plan/Actual table; full web build and scoped chart-color theme checks.
+
 ## 2026-11-02 — Web bench progression chart
 
 Added Bench Progression to web Progress alongside the three summary charts. It matches mobile: highest completed bench weight per recorded week across heavy bench, volume bench, readiness singles and goal attempts; current recorded value, labeled points and accessible weekly data. No prescribed targets, warm-ups, deleted/incomplete sets, foreign-account data or substitutions contribute. Actual fractional loads retain their precision.

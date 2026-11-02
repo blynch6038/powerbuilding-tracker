@@ -1,6 +1,7 @@
-import type {WorkoutLog} from './types';
+import type {WorkoutLog,ExerciseSubstitution} from './types';
 import {program} from './program';
 import {volumeMultiplier} from './loadConvention';
+import {resolveExercise} from './substitutions';
 export const benchIDs=new Set(['barbell-bench-press','barbell-bench-press-volume','readiness-single','goal-attempt']);
 export const position=(r:Pick<WorkoutLog,'week'|'day'>)=>r.week*10+['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'].indexOf(r.day);
 export const completed=(r:WorkoutLog)=>r.done&&!r.deleted_at&&!r.exercise_id.endsWith('-warmup');
@@ -8,6 +9,18 @@ export function loaded(r:WorkoutLog){const ex=program[r.week-1]?.workouts.find(w
 export function estimatedMax(weight:number,reps:number){return weight>0&&Number.isFinite(weight)&&Number.isInteger(reps)&&reps>=1&&reps<=10?Math.trunc(reps===1?weight:weight*(30+reps)/30):null;}
 export const setVolume=(row:WorkoutLog):number=>loaded(row)?row.weight!*row.reps!*volumeMultiplier(row.exercise_id):0;
 export interface WeeklyProgress {week:number;benchLoad:number|null;estimatedMax:number|null;volume:number|null;averageRPE:number|null}
+export interface BenchPlanPoint {week:number;weight:number|null}
+export function benchPlan(userId:string,choices:ExerciseSubstitution[]=[]):BenchPlanPoint[]{
+ return program.map(week=>{
+  const loads=week.workouts.flatMap(day=>day.exercises.flatMap(original=>{
+   if(!benchIDs.has(original.id)||original.sets<=0)return [];
+   const choice=choices.find(row=>row.user_id===userId&&row.week===week.week&&row.day===day.day&&row.exercise_id===original.id);
+   const exercise=resolveExercise(original,choice?.replacement);
+   return benchIDs.has(exercise.id)&&exercise.target!==null&&Number.isFinite(exercise.target)?[exercise.target]:[];
+  }));
+  return {week:week.week,weight:loads.length?Math.max(...loads):null};
+ });
+}
 export function weeklyProgress(logs:WorkoutLog[],userId:string):WeeklyProgress[]{
  const history=logs.filter(row=>row.user_id===userId&&completed(row)&&program[row.week-1]?.workouts.find(w=>w.day===row.day)?.exercises.some(ex=>row.exercise_id===ex.id||row.exercise_id.startsWith(ex.id+'--sub--')));
  return [...new Set(history.map(row=>row.week))].sort((a,b)=>a-b).map(week=>{
