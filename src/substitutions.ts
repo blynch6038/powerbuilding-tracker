@@ -41,18 +41,20 @@ const groups:Record<string,string[]>={
 import {canonicalExerciseName} from './exerciseNames';
 export {canonicalExerciseName} from './exerciseNames';
 export function alternativeExercises(exercise:Exercise):string[]{
- const options=groups[exercise.name]||groups[exercise.originalName||'']||['Dumbbell Variation','Machine Variation','Cable Variation'];
+ const options=groups[exercise.name==='Cable Bicep Curl'?'Cable Biceps Curl':exercise.name]||groups[exercise.originalName||'']||['Dumbbell Variation','Machine Variation','Cable Variation'];
  return [...new Set([exercise.name,...(exercise.originalName?[exercise.originalName]:[]),...options].map(canonicalExerciseName))];
 }
 
 // Choice rows always reference the original program slot. Never rename or copy set logs.
 export function resolveExercise(exercise:Exercise,replacement=exercise.name):Exercise {
+ // Display the requested singular name while retaining existing curl log identities.
+ const identityName=canonicalExerciseName(replacement)==='Cable Bicep Curl'?'Cable Biceps Curl':replacement;
  const original=exercise.originalName||exercise.name;
- const reps=replacement==='Cable Biceps Curl'?'10–12':exercise.originalReps||exercise.reps;
- const sets=replacement==='Cable Biceps Curl'&&exercise.id==='rkc-plank'?3:exercise.sets;
- if(replacement===original || original==='Flat Dumbbell Press'&&canonicalExerciseName(replacement)==='Dumbbell Chest Press')return {...exercise,name:canonicalExerciseName(replacement),reps,sets};
+ const reps=identityName==='Cable Biceps Curl'?'10–12':exercise.originalReps||exercise.reps;
+ const sets=identityName==='Cable Biceps Curl'&&exercise.id==='rkc-plank'?3:exercise.sets;
+ if(identityName===original || original==='Flat Dumbbell Press'&&canonicalExerciseName(replacement)==='Dumbbell Chest Press')return {...exercise,name:canonicalExerciseName(replacement),reps,sets};
  return {...exercise,name:canonicalExerciseName(replacement),reps,sets,target:null,
-  id:exercise.id+'--sub--'+replacement.toLowerCase().replace(/[^a-z0-9]+/g,'-')};
+  id:exercise.id+'--sub--'+identityName.toLowerCase().replace(/[^a-z0-9]+/g,'-')};
 }
 export function substitutionWeeks(program:import('./types').TrainingWeek[],week:number,day:import('./types').DayName,id:string,future:boolean):number[]{
  return program.filter(w=>w.week>=week&&(future||w.week===week)&&w.workouts.some(d=>d.day===day&&d.exercises.some(e=>e.id===id))).map(w=>w.week);

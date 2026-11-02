@@ -66,7 +66,7 @@ for(let i=0;i<10;i++){
 for(let i=0;i<9;i++){
  const ex=program[i].workouts[2].exercises;
  assert.equal(ex[1].name,'Dumbbell Chest Press');
- assert.equal(ex[5].name,i===0?'Forearm Plank':'Cable Biceps Curl');
+ assert.equal(ex[5].name,i===0?'Forearm Plank':'Cable Bicep Curl');
 }
 assert.equal(program[0].workouts[4].exercises[0].id,'barbell-bench-press-volume');
 console.log(`Validated all 10 workbook weeks, 50 workout days, ${count} exercise prescriptions, all warm-ups, Week 9 taper, Week 10 max test and stable IDs.`);

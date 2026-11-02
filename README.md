@@ -35,3 +35,8 @@ Invitation acceptance, production site and real user workout sync require end-to
 Each exercise has dated notes for changes or other details, scoped to the account, workout week/day, and active exercise. Add a note explicitly to save it offline; pending notes sync with the other app and are included in backups. Notes are append-only so simultaneous additions from two devices are preserved.
 
 The default deadlift is Trap-Bar Deadlift. Flat Dumbbell Press is displayed as Dumbbell Chest Press. Existing exercise choices and historical IDs remain intact. Progress shows explicit recorded values alongside the plots; missing records remain “—”. See [change log](CHANGELOG.md) for details and verification limits.
+
+
+## Dumbbell weights and volume
+
+Record the weight of one dumbbell and repetitions per arm. Volume counts both arms: 45 lb × 10 reps × 2 = 900 lb. Barbell and machine weights remain total load. Weight charts, recommendations and PRs use the entered per-dumbbell value. Saved history is not automatically halved; correct any earlier combined-weight entries through History.

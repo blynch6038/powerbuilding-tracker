@@ -25,7 +25,7 @@ function baseItems(i:number,j:number):Exercise[]{
   const original = exercise(name,sets,reps);
   // Keep the program slot stable; resolveExercise gives new movements separate log IDs.
   if(i>=1&&i<=8&&j===2){
-   if(name==='RKC Plank')return {...original,name:'Cable Biceps Curl',sets:3,reps:'10–12',originalName:name,originalReps:reps};
+   if(name==='RKC Plank')return {...original,name:'Cable Bicep Curl',sets:3,reps:'10–12',originalName:name,originalReps:reps};
    if(name==='Dumbbell Floor Press')return {...original,name:'Dumbbell Chest Press',originalName:name,originalReps:reps};
   }
   return original;

@@ -14,7 +14,7 @@ for(let week=1;week<=9;week++){
  assert.equal(resolveExercise(plank,'RKC Plank').reps,'20–30 sec');
  assert.equal(resolveExercise(floor,'Dumbbell Floor Press').id,'dumbbell-floor-press');
  assert(alternativeExercises(floor).includes('Dumbbell Chest Press'));
- assert(alternativeExercises(plank).includes('Cable Biceps Curl'));
+ assert(alternativeExercises(plank).includes('Cable Bicep Curl'));
 }
 const slot=program[1].workouts[2].exercises[5];
 assert.deepEqual(substitutionWeeks(program,2,'Wednesday',slot.id,true),[2,3,4,5,6,7,8,9]);
@@ -58,3 +58,9 @@ console.log('October 28 naming tests passed: trap-bar defaults, conventional his
 
 
 for(const [input,expected] of [['machine seated calf raise','Machine Seated Calf Raise'],['dumbbell chest press','Dumbbell Chest Press'],['Dumbbell Floor Press','Dumbbell Chest Press'],['forearm plank','Forearm Plank'],['RKC Plank','Forearm Plank'],['trap bar deadlift','Trap Bar Deadlift'],['Trap-Bar Deadlift','Trap Bar Deadlift'],['pec deck fly','Pec Deck Fly']])assert.equal(canonicalExerciseName(input),expected);
+
+assert.equal(canonicalExerciseName('cable biceps curl'),'Cable Bicep Curl');
+assert.equal(canonicalExerciseName('bird dog'),'Bird Dog');
+assert.equal(canonicalExerciseName('single-arm dumbbell row'),'Single-Arm Dumbbell Row');
+assert.equal(resolveExercise(slot,'Cable Bicep Curl').id,'rkc-plank--sub--cable-biceps-curl');
+assert.equal(resolveExercise(slot,'Cable Bicep Curl').reps,'10–12');
