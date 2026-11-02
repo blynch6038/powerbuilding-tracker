@@ -2,6 +2,14 @@
 
 Reconstructed from the repository's complete reachable commit history through October 28, 2026. All timestamps below are commit timestamps in America/New_York (EDT, UTC−04:00), not installation or release dates. Implementation and merge commits are listed separately so every recorded change remains traceable. Commit descriptions describe the recorded work; they do not independently establish device installation or live acceptance.
 
+## 2026-11-02 — Farmer Carry units and Arsenal chest press
+
+Farmer Carry fields and history identify pounds per hand and distance in meters. Existing carry weights remain unchanged and carries stay excluded from lifting-volume totals. Substitutions use their own unit convention.
+
+Added Arsenal Strength Reloaded Vertical Chest Press as a Machine Chest Press alternative, with a distinct log identity for independent progress and recommendations. Account exercise choices can apply it from Week 2 through the remaining applicable weeks while Week 1 retains Machine Chest Press. Numeric history values are preserved.
+
+Validation: per-hand units, carry-volume exclusion, alternate-machine IDs, Week 1 isolation, future-week scope, recommendation history separation, full web build and web/iOS parity. Native contracts and simulator build run in CI.
+
 ## 2026-11-02 — Chest-supported row uses dumbbell load convention
 
 Chest-Supported Row displays as Chest-Supported Dumbbell Row. Its existing log identity and saved weights remain unchanged. Weight fields show pounds per dumbbell; workout/progress volume counts both arms. The original slot and explicit legacy row choices resolve to the same IDs. Machine Row substitutions retain total-weight calculation.

@@ -5,4 +5,5 @@ export function isDumbbellExercise(idOrName:string):boolean {
  return /\bdumbbells?\b/i.test(movement)||movement==='chest supported row';
 }
 export const volumeMultiplier=(idOrName:string)=>isDumbbellExercise(idOrName)?2:1;
-export const weightUnit=(idOrName:string)=>isDumbbellExercise(idOrName)?'lb per dumbbell':'lb';
+export const isFarmerCarry=(idOrName:string)=>idOrName.split('--sub--').slice(-1)[0].replace(/-/g,' ').trim().toLowerCase()==='farmer carry';
+export const weightUnit=(idOrName:string)=>isFarmerCarry(idOrName)?'lb per hand':isDumbbellExercise(idOrName)?'lb per dumbbell':'lb';

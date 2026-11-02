@@ -27,3 +27,10 @@ const supported={...row,week:1,day:'Thursday',exercise_id:'chest-supported-row',
 assert.equal(setVolume(supported),800);
 assert.equal(setVolume({...supported,exercise_id:'chest-supported-row--sub--machine-row'}),400);
 assert.equal(setVolume({...supported,exercise_id:'chest-supported-row--sub--single-arm-dumbbell-row'}),800);
+
+const units=await build({entryPoints:['src/loadConvention.ts'],bundle:true,platform:'node',format:'esm',write:false});
+const {weightUnit,isFarmerCarry}=await import('data:text/javascript;base64,'+Buffer.from(units.outputFiles[0].text).toString('base64'));
+assert.equal(weightUnit('farmer-carry'),'lb per hand');
+assert.equal(isFarmerCarry('farmer-carry'),true);
+assert.equal(isFarmerCarry('farmer-carry--sub--trap-bar-carry'),false);
+assert.equal(weightUnit('farmer-carry--sub--trap-bar-carry'),'lb');
