@@ -43,8 +43,13 @@ const chartBench={...row,weight:185,reps:4,rpe:8};
 const chartDB={...row,id:'db',exercise_id:'incline-dumbbell-press',weight:45,reps:10,rpe:7.5};
 const chartTimed={...row,id:'hold',week:2,exercise_id:'weighted-plank',weight:0,reps:30,rpe:6};
 const chartNoise=[{...row,id:'foreign',user_id:'other',weight:999,rpe:10},{...row,id:'draft',week:3,done:false},{...row,id:'deleted',week:4,deleted_at:'today'},{...row,id:'warm',exercise_id:row.exercise_id+'-warmup',weight:999,rpe:10},{...row,id:'unknown',exercise_id:'unknown-exercise',rpe:10}];
-assert.deepEqual(weeklyProgress([chartTimed,chartDB,chartBench,...chartNoise],row.user_id),[{week:1,estimatedMax:209,volume:1640,averageRPE:7.75},{week:2,estimatedMax:null,volume:null,averageRPE:6}]);
+assert.deepEqual(weeklyProgress([chartTimed,chartDB,chartBench,...chartNoise],row.user_id),[{week:1,benchLoad:185,estimatedMax:209,volume:1640,averageRPE:7.75},{week:2,benchLoad:null,estimatedMax:null,volume:null,averageRPE:6}]);
 assert.deepEqual(weeklyProgress([chartBench],'other'),[]);
 assert.deepEqual(weeklyProgress([],'test'),[]);
 assert.equal(weeklyProgress([{...chartBench,weight:150}],row.user_id)[0].estimatedMax,170);
 console.log('Weekly progress passed: whole-number estimates without rounding up, exact integer boundaries, volume/RPE parity, current edits, missing weeks, account isolation and excluded rows.');
+
+const heavyAndVolume=weeklyProgress([chartBench,{...chartBench,id:'volume-bench',day:'Friday',exercise_id:'barbell-bench-press-volume',weight:190,reps:8},{...chartBench,id:'substitute',exercise_id:'barbell-bench-press--sub--dumbbell-bench-press',weight:250}],row.user_id);
+assert.equal(heavyAndVolume[0].benchLoad,190);
+assert.equal(weeklyProgress([{...chartBench,weight:182.5}],row.user_id)[0].benchLoad,182.5);
+assert.equal(weeklyProgress([{...chartBench,week:2,weight:175},chartBench],row.user_id)[1].benchLoad,175);

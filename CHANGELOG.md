@@ -2,6 +2,12 @@
 
 Reconstructed from the repository's complete reachable commit history through October 28, 2026. All timestamps below are commit timestamps in America/New_York (EDT, UTC−04:00), not installation or release dates. Implementation and merge commits are listed separately so every recorded change remains traceable. Commit descriptions describe the recorded work; they do not independently establish device installation or live acceptance.
 
+## 2026-11-02 — Web bench progression chart
+
+Added Bench Progression to web Progress alongside the three summary charts. It matches mobile: highest completed bench weight per recorded week across heavy bench, volume bench, readiness singles and goal attempts; current recorded value, labeled points and accessible weekly data. No prescribed targets, warm-ups, deleted/incomplete sets, foreign-account data or substitutions contribute. Actual fractional loads retain their precision.
+
+Validation: weekly maximum selection, heavy/volume inclusion, substitution exclusion, fractional recorded loads, latest-week selection, rendered four-chart layout and full web production build.
+
 ## 2026-11-02 — Whole-pound estimates and matching web progress charts
 
 Estimated maxes discard their decimal portion without rounding up, including bench goal values, weekly estimates and native PR estimates. Epley calculations use weight × (30 + reps) ÷ 30 before truncation to avoid dropping an exact integer through floating-point rearrangement; recorded singles remain the input to single-rep estimates. Actual logged weights retain their precision.
