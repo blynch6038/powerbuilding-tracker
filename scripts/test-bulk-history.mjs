@@ -18,7 +18,22 @@ assert.match(recordedExerciseName(source),/Conventional Deadlift/);assert.match(
 for(const patch of [{weight:-1},{reps:1.5},{rpe:10.5},{weight:null}])assert.throws(()=>buildBulkPlan(user,[draft(source,patch)],[source],[],now,uuid));
 assert.throws(()=>buildBulkPlan('another',[draft(source,{weight:145})],[source],[],now,uuid));
 assert.throws(()=>buildBulkPlan(user,[draft(source,{weight:145})],[{...source,weight:150}],[],now,uuid),/changed/);
-assert.throws(()=>buildBulkPlan(user,[draft(source,{},'Trap-Bar Deadlift')],[source,...correction.logs.filter(l=>l.done)],[],now,uuid),/already has an entry/);
+const target=correction.logs.find(l=>l.done);
+const reused=buildBulkPlan(user,[draft(source,{},'Trap-Bar Deadlift')],[source,target],[],now,uuid);
+assert.deepEqual(reused.logs.map(l=>[l.id,l.done]),[[source.id,false]]);
+assert.equal(target.weight,135);assert.equal(target.done,true);
+assert.match(reused.notes[0].body,/reused unchanged/);
+assert.equal(reused.choices.length,1);
+// Reproduce Week 1 Day 4: all three imported conventional sets already have exact trap-bar copies.
+const weekOneSources=[1,2,3].map(n=>({...row('conventional-deadlift',n),week:1,id:`${user}:1:Thursday:conventional-deadlift:${n}`,weight:195,reps:4,rpe:5}));
+const weekOneTargets=weekOneSources.map(r=>({...r,id:r.id.replace('conventional-deadlift:', 'conventional-deadlift--sub--trap-bar-deadlift:'),exercise_id:'conventional-deadlift--sub--trap-bar-deadlift'}));
+const weekOnePlan=buildBulkPlan(user,weekOneSources.map(r=>draft(r,{},'Trap-Bar Deadlift')),[...weekOneSources,...weekOneTargets],[],now,uuid);
+assert.equal(weekOnePlan.logs.length,3);assert.ok(weekOnePlan.logs.every(r=>!r.done));
+assert.equal(weekOnePlan.notes.length,3);assert.equal(weekOnePlan.choices[0].week,1);
+assert.equal([...weekOnePlan.logs,...weekOneTargets].filter(r=>r.done).length,3);
+for(const patch of [{weight:140},{reps:9},{rpe:7},{done:false}])assert.throws(()=>buildBulkPlan(user,[draft(source,{},'Trap-Bar Deadlift')],[source,{...target,...patch}],[],now,uuid),/different values/);
+assert.throws(()=>buildBulkPlan(user,[draft(source,{},'Trap-Bar Deadlift')],[source,{...target,deleted_at:now}],[],now,uuid),/deleted/);
+assert.throws(()=>buildBulkPlan(user,[draft(source,{},'Trap-Bar Deadlift'),draft(target,{weight:140})],[source,target],[],now,uuid),/Two edits/);
 assert.throws(()=>buildBulkPlan(user,[draft(source,{},'Trap-Bar Deadlift')],[source],[{...correction.choices[0],updated_at:now}],now,uuid),/choice changed/);
 const missing={...source,id:source.id.replace(':1',':3'),set_number:3,updated_at:'',weight:null,reps:null,rpe:null,done:false};
 const added=buildBulkPlan(user,[{...draft(missing,{weight:155,reps:5,done:true}),missing:true}],[],[],now,uuid);assert.equal(added.logs[0].done,true);
@@ -32,5 +47,17 @@ assert.equal((await database.logs.get(source.id)).weight,145);assert.equal(await
 await assert.rejects(commitHistoryBatch(user,[draft(source,{weight:160})]),/changed/);assert.equal((await database.logs.get(source.id)).weight,145);
 const latest=await database.logs.get(source.id);const failing=()=>{throw Error('notes disk error')};database.notes.hook('creating',failing);await assert.rejects(commitHistoryBatch(user,[draft(latest,{weight:160})]),/notes disk error/);database.notes.hook('creating').unsubscribe(failing);assert.equal((await database.logs.get(source.id)).weight,145);assert.equal(await database.notes.count(),2);
 navigator.onLine=true;remote=[{...latest,updated_at:'2099-01-01T00:00:00.000Z'}];await assert.rejects(commitHistoryBatch(user,[draft(latest,{weight:170})]),/Newer cloud/);assert.equal((await database.logs.get(source.id)).weight,145);remote=[];
+// Existing matching cloud targets are never overwritten; only the original and audit are written.
+await database.logs.clear();await database.notes.clear();await database.substitutions.clear();
+navigator.onLine=true;remote=[source,target];
+await database.logs.bulkPut([source,target]);
+await commitHistoryBatch(user,[draft(source,{},'Trap-Bar Deadlift')]);
+assert.equal((await database.logs.get(source.id)).done,false);
+assert.deepEqual(await database.logs.get(target.id),target);
+assert.equal(await database.logs.count(),2);assert.equal(await database.notes.count(),1);
+await database.logs.put(source);remote=[source,{...target,weight:200,updated_at:'2099-01-01T00:00:00.000Z'}];
+await assert.rejects(commitHistoryBatch(user,[draft(source,{},'Trap-Bar Deadlift')]),/different values/);
+assert.equal((await database.logs.get(source.id)).done,true);
 await database.delete();
 console.log('Bulk history tests passed: explicit draft-only changes, validation, identity-preserving numeric edits, retained exercise originals, target collisions, per-workout scope, missing sets, account isolation, stale drafts/cloud preflight, atomic rollback and offline restart.');
+

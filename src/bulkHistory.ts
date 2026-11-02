@@ -26,7 +26,7 @@ export function validateHistoryRow(row:WorkoutLog){
 const sameVersion=(a:WorkoutLog,b:WorkoutLog)=>['id','user_id','week','day','exercise_id','set_number','weight','reps','rpe','done','updated_at','deleted_at'].every(k=>a[k as keyof WorkoutLog]===b[k as keyof WorkoutLog]);
 export function buildBulkPlan(user:string,drafts:HistoryDraft[],rows:WorkoutLog[],choices:ExerciseSubstitution[],now:string,uuid:()=>string):BulkPlan{
  if(!drafts.length||drafts.length>500)throw Error('Review between 1 and 500 changed sets at a time.');
- const planned=new Map<string,WorkoutLog>(),notes:ExerciseNote[]=[],newChoices=new Map<string,ExerciseSubstitution>(),seen=new Set<string>();
+ const planned=new Map<string,WorkoutLog>(),notes:ExerciseNote[]=[],newChoices=new Map<string,ExerciseSubstitution>(),seen=new Set<string>(),destinations=new Set<string>();
  for(const draft of drafts){
   const before=draft.before;
   if(before.user_id!==user||before.deleted_at||before.id!==historyId(user,before.week,before.day,before.exercise_id,before.set_number)||seen.has(before.id))throw Error('This batch contains an unavailable or duplicate set. Reload history.');
@@ -36,6 +36,7 @@ export function buildBulkPlan(user:string,drafts:HistoryDraft[],rows:WorkoutLog[
   if(draft.missing?!!existing:!existing||!sameVersion(existing,before))throw Error('A set changed since you started editing. Discard that draft and review the latest history.');
   if(!changedDraft(draft))continue;
   let after:WorkoutLog={...before,...draft.patch,updated_at:now,dirty:1};
+  let reuseExisting=false;
   const replacement=draft.replacement.trim();
   if(replacement){
    if(before.exercise_id.endsWith('-warmup'))throw Error('Change working exercises only; warm-up values can be edited separately.');
@@ -44,7 +45,16 @@ export function buildBulkPlan(user:string,drafts:HistoryDraft[],rows:WorkoutLog[
    const target=resolveExercise(original,replacement);
    if(target.id!==before.exercise_id){
     after={...after,id:historyId(user,before.week,before.day,target.id,before.set_number),exercise_id:target.id};
-    if(rows.some(r=>r.id===after.id)||planned.has(after.id))throw Error(`Week ${before.week}, ${before.day}, set ${before.set_number}: the replacement already has an entry. Edit that entry instead.`);
+    if(destinations.has(after.id)||planned.has(after.id)||drafts.some(d=>d.before.id===after.id&&changedDraft(d)))throw Error('Two edits target the same set. Correct the replacement separately, then review this batch again.');
+    destinations.add(after.id);
+    const existingTarget=rows.find(r=>r.id===after.id);
+    if(existingTarget){
+     const context=`Week ${before.week}, ${before.day}, set ${before.set_number}`;
+     if(existingTarget.user_id!==user||existingTarget.deleted_at)throw Error(`${context}: the replacement entry is unavailable or deleted. It cannot be overwritten.`);
+     if(!(['weight','reps','rpe','done'] as const).every(key=>existingTarget[key]===after[key]))throw Error(`${context}: the replacement already has different values. Edit the existing replacement entry first; matching entries can then be combined.`);
+     // Reuse an exact match without rewriting its ID, timestamp or pending state.
+     reuseExisting=true;
+    }
     const choiceId=[user,before.week,before.day,original.id].join(':');
     const choice=choices.find(c=>c.id===choiceId);
     if(choice?.updated_at!==draft.choiceBefore?.updated_at||choice?.replacement!==draft.choiceBefore?.replacement)throw Error('An exercise choice changed since editing began. Discard the affected drafts and reload.');
@@ -57,8 +67,9 @@ export function buildBulkPlan(user:string,drafts:HistoryDraft[],rows:WorkoutLog[
   }
   validateHistoryRow(after);
   if(planned.has(after.id))throw Error('Two edits target the same set. Review the batch.');
-  planned.set(after.id,after);
-  notes.push({id:uuid(),user_id:user,week:after.week,day:after.day,exercise_id:after.exercise_id,created_at:now,dirty:1,body:`History correction · set ${before.set_number}\nBefore: ${recordedExerciseName(before)} · ${before.weight??'—'} lb × ${before.reps??'—'} · RPE ${before.rpe??'—'} · ${before.done?'completed':'incomplete'}${draft.missing?' (new entry)':''}\nAfter: ${recordedExerciseName(after)} · ${after.weight??'—'} lb × ${after.reps??'—'} · RPE ${after.rpe??'—'} · ${after.done?'completed':'incomplete'}${after.id!==before.id?'\nOriginal entry retained as incomplete to avoid counting both lifts.':''}`});
+  if(!reuseExisting)planned.set(after.id,after);
+  notes.push({id:uuid(),user_id:user,week:after.week,day:after.day,exercise_id:after.exercise_id,created_at:now,dirty:1,body:`History correction · set ${before.set_number}\nBefore: ${recordedExerciseName(before)} · ${before.weight??'—'} lb × ${before.reps??'—'} · RPE ${before.rpe??'—'} · ${before.done?'completed':'incomplete'}${draft.missing?' (new entry)':''}\nAfter: ${recordedExerciseName(after)} · ${after.weight??'—'} lb × ${after.reps??'—'} · RPE ${after.rpe??'—'} · ${after.done?'completed':'incomplete'}${after.id!==before.id?'\nOriginal entry retained as incomplete to avoid counting both lifts.':''}${reuseExisting?'\nMatching replacement entry reused unchanged; no duplicate set created.':''}`});
  }
  return {logs:[...planned.values()],notes,choices:[...newChoices.values()]};
 }
+

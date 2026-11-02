@@ -2,6 +2,12 @@
 
 Reconstructed from the repository's complete reachable commit history through October 28, 2026. All timestamps below are commit timestamps in America/New_York (EDT, UTC−04:00), not installation or release dates. Implementation and merge commits are listed separately so every recorded change remains traceable. Commit descriptions describe the recorded work; they do not independently establish device installation or live acceptance.
 
+## 2026-11-02 — Allow history corrections with matching replacement entries
+
+Bulk exercise corrections now reuse an existing replacement set when its weight, reps, RPE and completion exactly match the proposed result. The replacement remains unchanged; the original becomes incomplete so only the replacement counts toward progress. Review and audit notes explain reuse. Different values, deleted targets and overlapping source/target edits remain blocked. Online preflight rechecks current cloud values before saving.
+
+Validation: regression coverage for exact matches, value differences, deleted targets, overlapping edits, unchanged target records, cloud collisions and atomic history transactions; full production build.
+
 ## 2026-11-02 — Progress follows recorded history
 
 Removed the ten-week prescribed bench-weight display from Progress. Exercise charts use the same recorded exercise names as History; bench progress is hidden when no qualifying bench history exists. Completion totals exclude deleted records. Progress remains derived from completed, nondeleted working sets rather than a separate database table.
