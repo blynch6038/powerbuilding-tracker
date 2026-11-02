@@ -23,9 +23,9 @@ assert.equal(recommendWeight(10,'Monday',ex('barbell-bench-press','Barbell Bench
 console.log('Adaptive recommendation regression tests passed.');
 
 
-const arsenalID='machine-chest-press--sub--arsenal-strength-reloaded-vertical-chest-press';
+const forgexID='machine-chest-press--sub--forgex-wide-chest-press';
 const oldMachine=sets('Wednesday','machine-chest-press',3,90,10,5);
-const arsenal=ex(arsenalID,'Arsenal Strength Reloaded Vertical Chest Press',3,'10');
-assert.equal(recommendWeight(2,'Wednesday',arsenal,oldMachine).previous,null);
-const newMachine=sets('Wednesday',arsenalID,3,140,10,6).map(r=>({...r,week:2}));
-assert.match(recommendWeight(3,'Wednesday',arsenal,[...oldMachine,...newMachine]).previous,/Week 2: 140/);
+const forgex=ex(forgexID,'FORGEX WIDE CHEST PRESS',3,'10');
+assert.equal(recommendWeight(2,'Wednesday',forgex,oldMachine).previous,null);
+const newMachine=sets('Wednesday',forgexID,3,140,10,6).map(r=>({...r,week:2}));
+assert.match(recommendWeight(3,'Wednesday',forgex,[...oldMachine,...newMachine]).previous,/Week 2: 140/);

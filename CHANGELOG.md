@@ -2,6 +2,12 @@
 
 Reconstructed from the repository's complete reachable commit history through October 28, 2026. All timestamps below are commit timestamps in America/New_York (EDT, UTC−04:00), not installation or release dates. Implementation and merge commits are listed separately so every recorded change remains traceable. Commit descriptions describe the recorded work; they do not independently establish device installation or live acceptance.
 
+## 2026-11-02 — Correct machine name to FORGEX WIDE CHEST PRESS
+
+Replaced the Arsenal Strength Reloaded Vertical Chest Press option with FORGEX WIDE CHEST PRESS, including exact requested capitalization. Corrected account history and Week 2 onward selections use the FORGEX identity while Week 1 remains Machine Chest Press. Set values are preserved, and the corrected machine remains independent of the Week 1 machine for progress and recommendations.
+
+Validation: name capitalization, replacement identities, future scope, recommendation isolation, full web build and web/iOS training parity. Native contracts and simulator build run in CI.
+
 ## 2026-11-02 — Farmer Carry units and Arsenal chest press
 
 Farmer Carry fields and history identify pounds per hand and distance in meters. Existing carry weights remain unchanged and carries stay excluded from lifting-volume totals. Substitutions use their own unit convention.

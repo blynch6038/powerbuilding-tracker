@@ -73,9 +73,11 @@ assert.equal(resolveExercise(supported,'Machine Row').id,'chest-supported-row--s
 assert.equal(canonicalExerciseName('chest-supported-row'),'Chest-Supported Dumbbell Row');
 
 const machine=program[1].workouts[2].exercises.find(e=>e.id==='machine-chest-press');
-const arsenal=resolveExercise(machine,'Arsenal Strength Reloaded Vertical Chest Press');
-assert.equal(arsenal.id,'machine-chest-press--sub--arsenal-strength-reloaded-vertical-chest-press');
-assert.equal(arsenal.name,'Arsenal Strength Reloaded Vertical Chest Press');
-assert(alternativeExercises(machine).includes(arsenal.name));
+const forgex=resolveExercise(machine,'FORGEX WIDE CHEST PRESS');
+assert.equal(forgex.id,'machine-chest-press--sub--forgex-wide-chest-press');
+assert.equal(forgex.name,'FORGEX WIDE CHEST PRESS');
+assert(alternativeExercises(machine).includes(forgex.name));
 assert.equal(resolveExercise(program[0].workouts[2].exercises[0]).id,'machine-chest-press');
 assert.deepEqual(substitutionWeeks(program,2,'Wednesday',machine.id,true),[2,3,4,5,6,7,8,9]);
+
+assert.equal(canonicalExerciseName('forgex wide chest press'),'FORGEX WIDE CHEST PRESS');

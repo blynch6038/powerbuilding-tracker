@@ -12,7 +12,8 @@ export function canonicalExerciseName(name:string):string {
   'cable biceps curl':'Cable Bicep Curl',
   'cable bicep curl':'Cable Bicep Curl',
   'chest supported row':'Chest-Supported Dumbbell Row',
-  'chest supported dumbbell row':'Chest-Supported Dumbbell Row'
+  'chest supported dumbbell row':'Chest-Supported Dumbbell Row',
+  'forgex wide chest press':'FORGEX WIDE CHEST PRESS'
  };
  return aliases[name.trim().toLowerCase().replace(/-/g,' ').replace(/\s+/g,' ')]||name.trim().replace(/\b[a-z][a-z0-9]*/gi,word=>['ez','trx','rdl','rpe'].includes(word.toLowerCase())?word.toUpperCase():word[0].toUpperCase()+word.slice(1).toLowerCase());
 }

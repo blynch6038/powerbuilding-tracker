@@ -14,7 +14,7 @@ const groups:Record<string,string[]>={
  'Seated Leg Curl':['Lying Leg Curl','Standing Leg Curl','Nordic Hamstring Curl'],
  'Standing Calf Raise':['Seated Calf Raise','Leg Press Calf Raise','Single-Leg Calf Raise'],
  'Cable Crunch':['Machine Ab Crunch','Decline Sit-Up','Reverse Crunch'],
- 'Machine Chest Press':['Arsenal Strength Reloaded Vertical Chest Press','Dumbbell Bench Press','Smith Machine Chest Press','Cable Chest Press'],
+ 'Machine Chest Press':['FORGEX WIDE CHEST PRESS','Dumbbell Bench Press','Smith Machine Chest Press','Cable Chest Press'],
  'Dumbbell Floor Press':['Dumbbell Chest Press','Flat Dumbbell Press','Close-Grip Bench Press','Machine Chest Press'],
  'Seated Dumbbell Shoulder Press':['Machine Shoulder Press','Standing Barbell Press','Landmine Press'],
  'Cable Serratus Punch':['Dumbbell Serratus Punch','Scapular Wall Slide','Cable Press'],
