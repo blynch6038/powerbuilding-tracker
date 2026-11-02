@@ -28,6 +28,10 @@ export async function synchronize(userId:string):Promise<number|undefined>{
  try{
   // Pull first: a stale local pending record must not prevent the 96 imported Week 1 rows from appearing.
   const remote=await cloudRows<WorkoutLog>('set_logs',userId);
+  // A successful full pull is authoritative for already-synced history.
+  // Keep offline edits; remove clean cache rows deleted from the server.
+  const remoteIDs=new Set(remote.map(row=>row.id));
+  await db.logs.where('user_id').equals(userId).filter(row=>!row.dirty&&!remoteIDs.has(row.id)).delete();
   let conflicts=0;
   for(const row of remote||[]){
    const local=await db.logs.get(row.id);
@@ -75,3 +79,4 @@ export async function synchronize(userId:string):Promise<number|undefined>{
   return pending.length+pendingSubs.length;
  }finally{syncing=false;}
 }
+

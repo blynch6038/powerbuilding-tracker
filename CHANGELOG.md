@@ -2,6 +2,14 @@
 
 Reconstructed from the repository's complete reachable commit history through October 28, 2026. All timestamps below are commit timestamps in America/New_York (EDT, UTC−04:00), not installation or release dates. Implementation and merge commits are listed separately so every recorded change remains traceable. Commit descriptions describe the recorded work; they do not independently establish device installation or live acceptance.
 
+## 2026-11-02 — Progress follows recorded history
+
+Removed the ten-week prescribed bench-weight display from Progress. Exercise charts use the same recorded exercise names as History; bench progress is hidden when no qualifying bench history exists. Completion totals exclude deleted records. Progress remains derived from completed, nondeleted working sets rather than a separate database table.
+
+After a successful full cloud-history pull, synchronization removes clean local set copies absent from the server, scoped to the signed-in account. Pending offline edits remain intact; failed or partial history pulls do not prune the cache. No server rows or program prescriptions are deleted.
+
+Validation: production build and regression suite; coverage for corrected/deleted weights, stale-cache removal, failed pulls, account isolation and pending-edit retention.
+
 ## 2026-10-31 — Web-only bulk history editor
 
 Added a History tab (`/#history`) for past-workout corrections. Filter by week, training day, exercise text and completion; optionally include warm-ups or unlogged planned sets for a selected week. Edit individual weights/reps/RPE/completion or apply values and exercise corrections to selected visible rows. Drafts persist while switching tabs; before/after review and explicit save apply to all changed rows, including filtered-out drafts.
@@ -147,3 +155,4 @@ Added this dated, commit-linked history; linked documentation from the README; c
 Historical validation results are recorded in [Day 3 batch](docs/day3-batch.md). The recorded checks include TypeScript, program/recommendation and substitution tests, and a production PWA build. Live authenticated cross-device acceptance remains unverified in those records. A commit timestamp is not a confirmed Pages deployment timestamp.
 
 For future work, add a dated entry with the change, commit or PR link, validation performed, and any remaining release checks. Keep each platform's implementation history in its own repository.
+

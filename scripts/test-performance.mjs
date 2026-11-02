@@ -7,4 +7,10 @@ assert.equal(estimatedMax(225,1),225);assert.equal(estimatedMax(135,8),171);asse
 const row={id:'a',user_id:'test',week:1,day:'Monday',exercise_id:'barbell-bench-press',set_number:1,weight:135,reps:8,rpe:8,done:true,deleted_at:null,updated_at:'2030-01-01',dirty:0};
 const rows=[row,{...row,id:'b',week:2,weight:140},{...row,id:'c',week:3,weight:145},{...row,id:'d',week:2,exercise_id:'other',weight:200},{...row,id:'e',week:2,deleted_at:'deleted',weight:300}];
 assert.deepEqual(previousSession(rows,row.exercise_id,3,'Monday').map(l=>l.id),['b']);assert.equal(loaded(row),true);assert.equal(loaded({...row,exercise_id:row.exercise_id+'-warmup'}),false);assert.equal(loaded({...row,deleted_at:'deleted'}),false);
+assert.equal(loaded({...row,done:false,weight:999}),false);
+assert.equal(loaded({...row,weight:null}),false);
+// Corrections replace chart values; removed exercises have no remaining progress series.
+const corrected=[{...row,weight:125}, {...row,id:'removed',exercise_id:'paused-bench-press',deleted_at:'deleted',weight:300}];
+assert.deepEqual(corrected.filter(loaded).map(l=>[l.exercise_id,l.weight]),[['barbell-bench-press',125]]);
 console.log('Performance math passed: plate balance and remainder, estimate limits, program chronology, exercise isolation, deleted and warm-up exclusion.');
+
