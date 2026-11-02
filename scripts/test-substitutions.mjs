@@ -1,14 +1,14 @@
 import {build} from 'esbuild';
 import assert from 'node:assert/strict';
-const out=await build({stdin:{contents:"export {readWorkoutSelection,rememberWorkoutSelection} from './src/workoutSelection'; export {program} from './src/program'; export {resolveExercise,substitutionWeeks,alternativeExercises} from './src/substitutions';",resolveDir:process.cwd()},bundle:true,platform:'node',format:'esm',write:false});
-const {readWorkoutSelection,rememberWorkoutSelection,program,resolveExercise,substitutionWeeks,alternativeExercises}=await import('data:text/javascript;base64,'+Buffer.from(out.outputFiles[0].text).toString('base64'));
+const out=await build({stdin:{contents:"export {readWorkoutSelection,rememberWorkoutSelection} from './src/workoutSelection'; export {program} from './src/program'; export {resolveExercise,substitutionWeeks,alternativeExercises,canonicalExerciseName} from './src/substitutions';",resolveDir:process.cwd()},bundle:true,platform:'node',format:'esm',write:false});
+const {readWorkoutSelection,rememberWorkoutSelection,program,resolveExercise,substitutionWeeks,alternativeExercises,canonicalExerciseName}=await import('data:text/javascript;base64,'+Buffer.from(out.outputFiles[0].text).toString('base64'));
 for(let week=1;week<=9;week++){
  const [floor,plank]=[program[week-1].workouts[2].exercises[1],program[week-1].workouts[2].exercises[5]];
  const chest=resolveExercise(floor),curl=resolveExercise(plank);
- assert.equal(chest.name,week===1?'Dumbbell Floor Press':'Dumbbell Chest Press');
- assert.equal(chest.id,week===1?'dumbbell-floor-press':'dumbbell-floor-press--sub--dumbbell-chest-press');
+ assert.equal(chest.name,'Dumbbell Chest Press');
+ assert.equal(chest.id,'dumbbell-floor-press--sub--dumbbell-chest-press');
  assert.equal(chest.sets,week===9?2:3);assert.equal(chest.reps,'8');
- assert.equal(curl.id,week===1?'rkc-plank':'rkc-plank--sub--cable-biceps-curl');
+ assert.equal(curl.id,week===1?'rkc-plank--sub--forearm-plank':'rkc-plank--sub--cable-biceps-curl');
  assert.equal(curl.sets,3);assert.equal(curl.reps,week===1?'20–30 sec':'10–12');
  assert.equal(resolveExercise(plank,'RKC Plank').id,'rkc-plank');
  assert.equal(resolveExercise(plank,'RKC Plank').reps,'20–30 sec');
@@ -44,7 +44,7 @@ console.log('Workout restoration tests passed: per-account persistence, valid We
 for (const week of program) {
  const deadlift=week.workouts.find(w=>w.day==='Thursday').exercises[0];
  assert.equal(deadlift.id,'conventional-deadlift');
- assert.equal(resolveExercise(deadlift).name,'Trap-Bar Deadlift');
+ assert.equal(resolveExercise(deadlift).name,'Trap Bar Deadlift');
  assert.equal(resolveExercise(deadlift).id,'conventional-deadlift--sub--trap-bar-deadlift');
  assert.equal(resolveExercise(deadlift,'Conventional Deadlift').id,'conventional-deadlift');
  const friday=week.workouts.find(w=>w.day==='Friday');
@@ -55,3 +55,6 @@ const floor=program[1].workouts[2].exercises[1];
 assert.equal(resolveExercise(floor,'Flat Dumbbell Press').name,'Dumbbell Chest Press');
 assert.equal(resolveExercise(floor,'Flat Dumbbell Press').id,'dumbbell-floor-press--sub--flat-dumbbell-press');
 console.log('October 28 naming tests passed: trap-bar defaults, conventional history and legacy flat-press IDs.');
+
+
+for(const [input,expected] of [['machine seated calf raise','Machine Seated Calf Raise'],['dumbbell chest press','Dumbbell Chest Press'],['Dumbbell Floor Press','Dumbbell Chest Press'],['forearm plank','Forearm Plank'],['RKC Plank','Forearm Plank'],['trap bar deadlift','Trap Bar Deadlift'],['Trap-Bar Deadlift','Trap Bar Deadlift'],['pec deck fly','Pec Deck Fly']])assert.equal(canonicalExerciseName(input),expected);

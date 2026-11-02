@@ -2,6 +2,12 @@
 
 Reconstructed from the repository's complete reachable commit history through October 28, 2026. All timestamps below are commit timestamps in America/New_York (EDT, UTC−04:00), not installation or release dates. Implementation and merge commits are listed separately so every recorded change remains traceable. Commit descriptions describe the recorded work; they do not independently establish device installation or live acceptance.
 
+## 2026-11-02 — Consistent exercise display names
+
+Standardized Machine Seated Calf Raise, Dumbbell Chest Press, Forearm Plank and Trap Bar Deadlift across workout/history/progress display. RKC Plank and legacy floor/flat dumbbell press names display as Forearm Plank and Dumbbell Chest Press. Stable program-slot identities remain in place. Pec Deck Fly uses consistent capitalization. Existing cable-curl substitutions remain intact.
+
+Validation: display-alias regression checks, full web build and generated web/iOS training parity; native contracts and simulator build run in macOS CI.
+
 ## 2026-11-02 — Allow history corrections with matching replacement entries
 
 Bulk exercise corrections now reuse an existing replacement set when its weight, reps, RPE and completion exactly match the proposed result. The replacement remains unchanged; the original becomes incomplete so only the replacement counts toward progress. Review and audit notes explain reuse. Different values, deleted targets and overlapping source/target edits remain blocked. Online preflight rechecks current cloud values before saving.

@@ -22,7 +22,7 @@ import {completed} from './performance';
 // Keep the theme after all base/component CSS in the production bundle.
 import './hud.css';
 const dayLabel=(day:DayName):string=>({Monday:'Day 1',Tuesday:'Day 2',Wednesday:'Day 3',Thursday:'Day 4',Friday:'Day 5',Saturday:'Day 6'})[day]||day;
-const historyExerciseName=(ex:Exercise,id:string)=>id===ex.id?canonicalExerciseName(ex.originalName||ex.name):id.split('--sub--').slice(1).join('--sub--').replace(/-/g,' ').replace(/^flat dumbbell press$/i,'Dumbbell Chest Press');
+const historyExerciseName=(ex:Exercise,id:string)=>id===ex.id?canonicalExerciseName(ex.originalName||ex.name):canonicalExerciseName(id.split('--sub--').slice(1).join('--sub--').replace(/-/g,' '));
 function App(){
 const[resetMode,setResetMode]=useState(false),[resetSent,setResetSent]=useState(false),[resetBusy,setResetBusy]=useState(false),[user,setUser]=useState<User|null>(null),[loading,setLoading]=useState(true),[email,setEmail]=useState(''),[password,setPassword]=useState(''),[error,setError]=useState(''),[week,setWeek]=useState(1),[day,setDay]=useState<DayName>('Monday'),[tab,setTab]=useState<TabName>(location.hash==='#history'?'History':'Today'),[logs,setLogs]=useState<WorkoutLog[]>([]),[cloudLogs,setCloudLogs]=useState<WorkoutLog[]>([]),[substitutions,setSubstitutions]=useState<ExerciseSubstitution[]>([]),[status,setStatus]=useState('Ready'),[newPassword,setNewPassword]=useState(''),[passwordSetup,setPasswordSetup]=useState(false);
 const [overview,setOverview]=useState(false),[order,setOrder]=useState<string[]>([]);

@@ -38,9 +38,10 @@ const groups:Record<string,string[]>={
  'Goal Attempt':[],
  'Recovery / Mobility':['Easy Walking','Stationary Cycling','Mobility Flow']
 };
-export const canonicalExerciseName=(name:string):string=>name==='Flat Dumbbell Press'?'Dumbbell Chest Press':name;
+import {canonicalExerciseName} from './exerciseNames';
+export {canonicalExerciseName} from './exerciseNames';
 export function alternativeExercises(exercise:Exercise):string[]{
- const options=groups[exercise.name]||['Dumbbell Variation','Machine Variation','Cable Variation'];
+ const options=groups[exercise.name]||groups[exercise.originalName||'']||['Dumbbell Variation','Machine Variation','Cable Variation'];
  return [...new Set([exercise.name,...(exercise.originalName?[exercise.originalName]:[]),...options].map(canonicalExerciseName))];
 }
 
@@ -56,3 +57,4 @@ export function resolveExercise(exercise:Exercise,replacement=exercise.name):Exe
 export function substitutionWeeks(program:import('./types').TrainingWeek[],week:number,day:import('./types').DayName,id:string,future:boolean):number[]{
  return program.filter(w=>w.week>=week&&(future||w.week===week)&&w.workouts.some(d=>d.day===day&&d.exercises.some(e=>e.id===id))).map(w=>w.week);
 }
+

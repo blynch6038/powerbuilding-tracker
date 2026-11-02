@@ -14,7 +14,7 @@ assert.equal(source.weight,135);assert.equal(numeric.logs[0].id,source.id);asser
 const correction=buildBulkPlan(user,[draft(source,{},'Trap-Bar Deadlift'),draft(second,{},'Trap-Bar Deadlift')],[source,second],[],now,uuid);
 assert.equal(correction.logs.length,4);assert.equal(correction.logs.find(l=>l.id===source.id).done,false);assert.equal(correction.logs.find(l=>l.id===source.id).weight,135);
 assert.equal(correction.logs.filter(l=>l.done).length,2);assert.equal(correction.choices.length,1);assert.equal(correction.choices[0].week,2);assert.equal(correction.choices[0].day,'Thursday');assert.equal(correction.notes.length,2);
-assert.match(recordedExerciseName(source),/Conventional Deadlift/);assert.match(recordedExerciseName(correction.logs.find(l=>l.done)),/trap bar deadlift/);
+assert.match(recordedExerciseName(source),/Conventional Deadlift/);assert.match(recordedExerciseName(correction.logs.find(l=>l.done)),/Trap Bar Deadlift/);
 for(const patch of [{weight:-1},{reps:1.5},{rpe:10.5},{weight:null}])assert.throws(()=>buildBulkPlan(user,[draft(source,patch)],[source],[],now,uuid));
 assert.throws(()=>buildBulkPlan('another',[draft(source,{weight:145})],[source],[],now,uuid));
 assert.throws(()=>buildBulkPlan(user,[draft(source,{weight:145})],[{...source,weight:150}],[],now,uuid),/changed/);
