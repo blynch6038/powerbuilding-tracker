@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "npm run typecheck && npm run test:program && npm run test:recommendations && node scripts/test-substitutions.mjs && node scripts/test-notes.mjs && node scripts/test-performance.mjs && node scripts/test-bulk-history.mjs && vite build && node scripts/test-theme.mjs",
+    "build": "npm run typecheck && npm run test:program && npm run test:recommendations && node scripts/test-substitutions.mjs && node scripts/test-notes.mjs && node scripts/test-performance.mjs && node scripts/test-progress-charts.mjs && node scripts/test-bulk-history.mjs && vite build && node scripts/test-theme.mjs",
     "dev": "vite",
     "typecheck": "tsc --noEmit",
     "test:program": "node scripts/validate-program.mjs",
@@ -30,3 +30,4 @@
     "vite-plugin-pwa": "1.0.0"
   }
 }
+

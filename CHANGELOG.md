@@ -2,6 +2,14 @@
 
 Reconstructed from the repository's complete reachable commit history through October 28, 2026. All timestamps below are commit timestamps in America/New_York (EDT, UTC−04:00), not installation or release dates. Implementation and merge commits are listed separately so every recorded change remains traceable. Commit descriptions describe the recorded work; they do not independently establish device installation or live acceptance.
 
+## 2026-11-02 — Whole-pound estimates and matching web progress charts
+
+Estimated maxes discard their decimal portion without rounding up, including bench goal values, weekly estimates and native PR estimates. Epley calculations use weight × (30 + reps) ÷ 30 before truncation to avoid dropping an exact integer through floating-point rearrangement; recorded singles remain the input to single-rep estimates. Actual logged weights retain their precision.
+
+Web Progress now includes the mobile summary charts: Bench Estimated 1RM, Working Volume and Average Actual RPE. They group completed history by program week, show current recorded values and data labels, and include accessible data tables. Missing weeks have no bar. Account isolation, valid-RPE averaging, per-dumbbell/both-arm volume and warm-up/deletion/incomplete/time-distance exclusions follow the mobile rules. Existing exercise weight charts remain available.
+
+Validation: integer-boundary and truncation tests; matching web/native weekly metric fixtures; corrected-history, missing-data and account isolation cases; rendered three-chart and accessible-table checks; full web build. Native contracts and simulator build run in CI.
+
 ## 2026-11-02 — Recommendations use the last working set
 
 Removed session-average weights from recommendations. Every exercise now uses the highest-numbered completed loaded set from its prior matching session as the weight baseline, including bench hold/caution calculations. The prior-session summary shows that set's actual weight, reps and set number. Editing an earlier set or receiving records in a different order does not change the selection. Increase text states the suggested load and actual increase after rounding.

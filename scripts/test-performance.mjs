@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {build} from 'esbuild';
 const built=await build({entryPoints:['src/performance.ts'],bundle:true,platform:'node',format:'esm',write:false});
-const {plates,estimatedMax,previousSession,loaded,setVolume}=await import('data:text/javascript;base64,'+Buffer.from(built.outputFiles[0].text).toString('base64'));
+const {plates,estimatedMax,previousSession,loaded,setVolume,weeklyProgress}=await import('data:text/javascript;base64,'+Buffer.from(built.outputFiles[0].text).toString('base64'));
 assert.deepEqual(plates(135),{result:[{plate:45,count:1}],remainder:0});assert.equal(plates(137).remainder,2);assert.deepEqual(plates(45).result,[]);assert.equal(plates(40),null);assert.equal(plates(NaN),null);
 assert.equal(estimatedMax(225,1),225);assert.equal(estimatedMax(135,8),171);assert.equal(estimatedMax(135,11),null);assert.equal(estimatedMax(0,8),null);
 const row={id:'a',user_id:'test',week:1,day:'Monday',exercise_id:'barbell-bench-press',set_number:1,weight:135,reps:8,rpe:8,done:true,deleted_at:null,updated_at:'2030-01-01',dirty:0};
@@ -34,3 +34,17 @@ assert.equal(weightUnit('farmer-carry'),'lb per hand');
 assert.equal(isFarmerCarry('farmer-carry'),true);
 assert.equal(isFarmerCarry('farmer-carry--sub--trap-bar-carry'),false);
 assert.equal(weightUnit('farmer-carry--sub--trap-bar-carry'),'lb');
+
+assert.equal(estimatedMax(185,4),209);
+assert.equal(estimatedMax(157.5,5),183);
+assert.equal(estimatedMax(225.9,1),225);
+assert.equal(estimatedMax(150,2),160); // avoid floating-point 159.999... before truncation
+const chartBench={...row,weight:185,reps:4,rpe:8};
+const chartDB={...row,id:'db',exercise_id:'incline-dumbbell-press',weight:45,reps:10,rpe:7.5};
+const chartTimed={...row,id:'hold',week:2,exercise_id:'weighted-plank',weight:0,reps:30,rpe:6};
+const chartNoise=[{...row,id:'foreign',user_id:'other',weight:999,rpe:10},{...row,id:'draft',week:3,done:false},{...row,id:'deleted',week:4,deleted_at:'today'},{...row,id:'warm',exercise_id:row.exercise_id+'-warmup',weight:999,rpe:10},{...row,id:'unknown',exercise_id:'unknown-exercise',rpe:10}];
+assert.deepEqual(weeklyProgress([chartTimed,chartDB,chartBench,...chartNoise],row.user_id),[{week:1,estimatedMax:209,volume:1640,averageRPE:7.75},{week:2,estimatedMax:null,volume:null,averageRPE:6}]);
+assert.deepEqual(weeklyProgress([chartBench],'other'),[]);
+assert.deepEqual(weeklyProgress([],'test'),[]);
+assert.equal(weeklyProgress([{...chartBench,weight:150}],row.user_id)[0].estimatedMax,170);
+console.log('Weekly progress passed: whole-number estimates without rounding up, exact integer boundaries, volume/RPE parity, current edits, missing weeks, account isolation and excluded rows.');
