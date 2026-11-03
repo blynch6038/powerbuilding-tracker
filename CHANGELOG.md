@@ -1,5 +1,10 @@
 # Power Builder web change log
 
+## 2026-11-03 — Exercise weights grouped by body part
+
+Individual exercise weight charts on web and exercise personal records on iOS are organized under their primary body part, with exercises sorted by name and empty groups hidden. Substitutions use the movement actually performed, keeping separate exercise histories intact. Both apps share the classification source. Bench progression and the three summary charts through Average Actual RPE retain their existing layout and calculations. No history or prescribed exercises are changed.
+
+
 ## 2026-11-02 — Five-pound dumbbell progression
 
 Dumbbell recommendations now increase by 5 lb per dumbbell when the previous session qualifies for progression, including chest-supported dumbbell rows and dumbbell substitutions. For example, 40 lb recommends 45 lb and 45 lb recommends 50 lb. Last-set baselines and RPE/completion checks remain in effect; barbell/machine substitutions retain their own increment rules. Logged history is unchanged.
