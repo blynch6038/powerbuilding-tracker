@@ -8,7 +8,7 @@ import {recordedExerciseName} from './bulkHistory';
 import {isDumbbellExercise,isFarmerCarry,weightUnit} from './loadConvention';
 import {warmupSchedule} from './warmupSchedule';
 import {recommendWeight} from './recommendations';
-import {benchIDs,completed,estimatedMax,loaded,setVolume,plates,position,previousSession} from './performance';
+import {benchIDs,completed,loaded,setVolume,plates,position,previousSession,weeklyProgress} from './performance';
 export function RestTimer({storageKey}:{storageKey:string}){
  const [deadline,setDeadline]=useState(()=>{try{return Number(localStorage.getItem(storageKey))||0}catch{return 0}}),[now,setNow]=useState(Date.now());const announced=useRef(false);
  function update(value:number){setDeadline(value);announced.current=false;try{localStorage.setItem(storageKey,String(value))}catch{/* timer still works in memory */}}
@@ -60,7 +60,20 @@ export function WorkoutRecap({logs,week,day}:{logs:WorkoutLog[];week:number;day:
  const volume=(rows:WorkoutLog[])=>rows.reduce((a,l)=>a+setVolume(l),0);const records=[...new Set(current.filter(loaded).filter(l=>l.weight!>Math.max(0,...logs.filter(x=>loaded(x)&&x.exercise_id===l.exercise_id&&position(x)<position(l)).map(x=>x.weight!))).map(l=>l.exercise_id))];
  return <section className="exercise recap"><small>SESSION RECAP · WORKING SETS</small><h2>{current.length} sets · {volume(current).toLocaleString()} lb × reps</h2><p>{old.length?`${volume(current)-volume(old)>=0?'+':''}${(volume(current)-volume(old)).toLocaleString()} volume vs Week ${priorWeek} · ${current.length-old.length>=0?'+':''}${current.length-old.length} sets`:'No earlier matching training day to compare.'}</p><p>{records.length} exercise load records against earlier program sessions.</p><small>Dumbbell volume counts both arms: per-dumbbell weight × reps per arm × 2. Current session totals; partial sessions remain partial. Warm-ups, holds, distance and deleted sets excluded from volume.</small></section>;
 }
-export function GoalProgress({logs}:{logs:WorkoutLog[]}){const bench=logs.filter(l=>loaded(l)&&benchIDs.has(l.exercise_id));if(!bench.length)return null;const last=Math.max(...bench.map(position));const current=bench.filter(l=>position(l)===last);const estimates=current.map(l=>estimatedMax(l.weight!,l.reps!)).filter((v):v is number=>v!==null);const estimate=estimates.length?Math.max(...estimates):null;const tested=bench.filter(l=>l.reps===1).map(l=>l.weight!);return <section className="hero"><small>BENCH GOAL · 225 LB</small><h2>{estimate!==null?`${estimate.toLocaleString()} lb estimated max`:'No qualifying bench sets yet'}</h2><progress aria-label="Estimated bench goal progress" value={Math.min(estimate||0,225)} max={225}/><p>Heaviest recorded single: {tested.length?Math.max(...tested)+' lb':'—'}</p><small>Epley estimate from the latest program session, using 1–10 reps. An estimate is not a tested lift or a guarantee.</small></section>}
+export function GoalProgress({logs,userId}:{logs:WorkoutLog[];userId:string}){
+ const bench=logs.filter(row=>row.user_id===userId&&benchIDs.has(row.exercise_id)&&loaded(row));
+ if(!bench.length)return null;
+ const latest=weeklyProgress(bench,userId).reverse().find(week=>week.estimatedMax!==null);
+ const estimate=latest?.estimatedMax??null;
+ const tested=bench.filter(row=>row.reps===1).map(row=>row.weight!);
+ return <section className="hero">
+  <small>BENCH GOAL · 225 LB</small>
+  <h2>{estimate!==null?`${estimate.toLocaleString()} lb estimated max`:'No qualifying bench sets yet'}</h2>
+  <progress aria-label="Estimated bench goal progress" value={Math.min(estimate??0,225)} max={225}/>
+  <p>Heaviest recorded single: {tested.length?Math.max(...tested)+' lb':'—'}</p>
+  <small>{latest?`Week ${latest.week} best · `:''}Epley estimate from completed bench sets of 1–10 reps.</small>
+ </section>;
+}
 export function ExerciseProgress({logs}:{logs:WorkoutLog[]}){
  const ids=[...new Set(logs.filter(loaded).map(l=>l.exercise_id))].sort((a,b)=>recordedExerciseName(logs.find(l=>l.exercise_id===a)!).localeCompare(recordedExerciseName(logs.find(l=>l.exercise_id===b)!)));
  return <>{bodyParts.map(bodyPart=>{const grouped=ids.filter(id=>primaryBodyPart(id)===bodyPart);return grouped.length?<section className="exercise-body-group" key={bodyPart} aria-label={bodyPart+' exercise weights'}><h2 className="body-part-title">{bodyPart}</h2>{grouped.map(id=>{const rows=logs.filter(l=>loaded(l)&&l.exercise_id===id);const weeks=[...new Set(rows.map(l=>l.week))].sort((a,b)=>a-b);const values=weeks.map(week=>({week,weight:Math.max(...rows.filter(l=>l.week===week).map(l=>l.weight!))}));const latest=values[values.length-1];const max=Math.max(...values.map(v=>v.weight),1);return <section className="exercise" key={id}><h3>{recordedExerciseName(rows[0])}</h3><small>LATEST PROGRAM WEEK</small><h2>{latest.weight} {weightUnit(id)} · Week {latest.week}</h2><svg role="img" aria-label={`Weekly highest completed load: ${values.map(v=>`Week ${v.week}: ${v.weight} lb`).join(', ')}`} viewBox="0 0 360 110" style={{width:'100%',height:110}}><polyline fill="none" stroke="#ff781f" strokeWidth="3" points={values.map(v=>`${16+(v.week-1)*36},${90-v.weight/max*70}`).join(' ')}/>{values.map(v=><g key={v.week}><circle cx={16+(v.week-1)*36} cy={90-v.weight/max*70} r="4" fill="#ff781f"/><text x={16+(v.week-1)*36} y="108" textAnchor="middle" fill="#bbb" fontSize="10">W{v.week}</text></g>)}</svg></section>})}</section>:null;})}</>;

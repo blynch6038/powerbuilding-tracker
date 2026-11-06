@@ -34,7 +34,9 @@ assert.equal((reference.match(/class="bench-actual-point"/g)||[]).length,3);
 assert.match(reference,/Plan · Week 10: 225 lb/);
 assert.doesNotMatch(reference,/Actual · Week (4|5|6|7|8|9|10):/);
 assert.match(reference,/Chart legend/);
-const goal=renderToStaticMarkup(<GoalProgress logs={[row]}/>);assert.match(goal,/209 lb estimated max/);assert.doesNotMatch(goal,/209\\./);
+const friday={...row,id:'friday',day:'Friday',exercise_id:'barbell-bench-press-volume',weight:145,reps:7};
+const goal=renderToStaticMarkup(<GoalProgress logs={[row,friday]} userId="test"/>);
+assert.match(goal,/Week 1 best/);assert.match(goal,/209 lb estimated max/);assert.doesNotMatch(goal,/209\\./);
 for(const [id,group] of [
  ['barbell-bench-press','Chest'],['incline-dumbbell-press','Chest'],['close-grip-bench-press','Triceps'],
  ['chest-supported-row','Back'],['seated-dumbbell-shoulder-press','Shoulders'],['barbell-back-squat','Quads'],
