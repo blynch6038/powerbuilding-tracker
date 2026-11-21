@@ -8,8 +8,8 @@ for(let week=1;week<=9;week++){
  assert.equal(chest.name,'Dumbbell Chest Press');
  assert.equal(chest.id,'dumbbell-floor-press--sub--dumbbell-chest-press');
  assert.equal(chest.sets,week===9?2:3);assert.equal(chest.reps,'8');
- assert.equal(curl.id,week===1?'rkc-plank--sub--forearm-plank':'rkc-plank--sub--cable-biceps-curl');
- assert.equal(curl.sets,3);assert.equal(curl.reps,week===1?'20–30 sec':'10–12');
+ assert.equal(curl.id,'rkc-plank--sub--cable-biceps-curl');
+ assert.equal(curl.sets,3);assert.equal(curl.reps,'10–12');
  assert.equal(resolveExercise(plank,'RKC Plank').id,'rkc-plank');
  assert.equal(resolveExercise(plank,'RKC Plank').reps,'20–30 sec');
  assert.equal(resolveExercise(floor,'Dumbbell Floor Press').id,'dumbbell-floor-press');
@@ -109,3 +109,10 @@ assert.equal(ez.id,'rkc-plank--sub--ez-bar-curl');assert.equal(ez.sets,3);assert
 assert.equal(resolveExercise(slot,'Dead Bug').reps,'10–12/side');
 assert.equal(resolveExercise(slot,'Forearm Plank').reps,'20–30 sec');
 console.log('Audited all substitution prescriptions across all ten weeks.');
+
+for(const week of program.slice(0,9)){
+ const biceps=week.workouts[2].exercises[5];
+ assert.equal(biceps.name,'Cable Bicep Curl');
+ assert.deepEqual(alternativeExercises(biceps),['Cable Bicep Curl','EZ-Bar Curl','Dumbbell Biceps Curl']);
+ for(const option of alternativeExercises(biceps))assert.equal(resolveExercise(biceps,option).reps,'10–12');
+}

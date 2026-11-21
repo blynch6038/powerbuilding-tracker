@@ -23,8 +23,8 @@ const groups:Record<string,string[]>={
  'Cable Serratus Punch':['Dumbbell Serratus Punch','Scapular Wall Slide','Cable Press'],
  'Overhead Triceps Extension':['Cable Overhead Triceps Extension','Dumbbell Skull Crusher','Rope Pushdown'],
  'Dumbbell Chest Press':['Dumbbell Floor Press','Machine Chest Press','Barbell Bench Press','Smith Machine Bench Press'],
- 'Cable Biceps Curl':['Dumbbell Biceps Curl','EZ-Bar Curl','RKC Plank'],
- 'RKC Plank':['Cable Biceps Curl','EZ-Bar Curl','Dumbbell Biceps Curl','Forearm Plank','Hollow-Body Hold','Dead Bug'],
+ 'Cable Biceps Curl':['Dumbbell Biceps Curl','EZ-Bar Curl'],
+ 'RKC Plank':['Cable Biceps Curl','EZ-Bar Curl','Dumbbell Biceps Curl'],
  'Conventional Deadlift':['Trap-Bar Deadlift','Sumo Deadlift','Rack Pull'],
  'Trap-Bar Deadlift':['Conventional Deadlift','Sumo Deadlift','Rack Pull'],
  'Romanian Deadlift':['Dumbbell Romanian Deadlift','Single-Leg Romanian Deadlift','Good Morning'],
@@ -44,6 +44,7 @@ const groups:Record<string,string[]>={
 import {canonicalExerciseName} from './exerciseNames';
 export {canonicalExerciseName} from './exerciseNames';
 export function alternativeExercises(exercise:Exercise):string[]{
+ if(exercise.id.split('--sub--')[0]==='rkc-plank')return ['Cable Bicep Curl','EZ-Bar Curl','Dumbbell Biceps Curl'];
  const options=groups[exercise.name==='Cable Bicep Curl'?'Cable Biceps Curl':exercise.name==='Chest-Supported Dumbbell Row'?'Chest-Supported Row':exercise.name]||groups[exercise.originalName||'']||['Dumbbell Variation','Machine Variation','Cable Variation'];
  return [...new Set([exercise.name,...(exercise.originalName?[exercise.originalName]:[]),...options].map(canonicalExerciseName))];
 }

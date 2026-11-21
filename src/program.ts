@@ -24,8 +24,8 @@ function baseItems(i:number,j:number):Exercise[]{
   }
   const original = exercise(name,sets,reps);
   // Keep the program slot stable; resolveExercise gives new movements separate log IDs.
+  if(j===2&&name==='RKC Plank')return {...original,name:'Cable Bicep Curl',sets:3,reps:'10–12',originalName:name,originalReps:reps};
   if(i>=1&&i<=8&&j===2){
-   if(name==='RKC Plank')return {...original,name:'Cable Bicep Curl',sets:3,reps:'10–12',originalName:name,originalReps:reps};
    if(name==='Dumbbell Floor Press')return {...original,name:'Dumbbell Chest Press',originalName:name,originalReps:reps};
   }
   return original;
@@ -57,4 +57,5 @@ export const program:TrainingWeek[]=Array.from({length:10},(_,i)=>{
  return {week:i+1,workouts};
 });
 export const maxTest={week:10,day:'Saturday' as DayName,title:'225 lb Bench Max Test',warmups:[[45,10],[95,5],[135,3],[165,2],[185,1]] as Array<[number,number]>};
+
 
