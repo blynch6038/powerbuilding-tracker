@@ -1,4 +1,5 @@
 import type {DayName,Exercise,WorkoutLog} from './types';
+import {resolveExercise} from './substitutions';
 import {program} from './program';
 import {isDumbbellExercise} from './loadConvention';
 
@@ -22,8 +23,10 @@ export function recommendWeight(week:number,day:DayName,exercise:Exercise,allLog
   return {weight:prescribed,status:bench?'plan':'none',reason:bench?'Follow the original 10-week bench progression. No earlier logged session exists.':'No completed previous session for this exercise. Start conservatively and log your results.',previous:null,isBenchGoal:bench};
  }
  const completed=latest.filter(x=>x.done&&isLoaded(x.weight)&&x.reps!==null);
- const required=program[lastWeek-1]?.workouts.find(w=>w.day===day)?.exercises.find(e=>e.id===exercise.id)?.sets??completed.length;
- const plannedReps=program[lastWeek-1]?.workouts.find(w=>w.day===day)?.exercises.find(e=>e.id===exercise.id)?.reps??exercise.reps;
+ const previousSlot=program[lastWeek-1]?.workouts.find(w=>w.day===day)?.exercises.find(e=>e.id===exercise.id.split('--sub--')[0]);
+ const previousExercise=previousSlot?resolveExercise(previousSlot,exercise.name):exercise;
+ const required=previousExercise.sets;
+ const plannedReps=previousExercise.reps;
  const requiredReps=numericReps(plannedReps);
  const maxRpe=Math.max(0,...latest.filter(x=>x.done&&x.rpe!==null&&x.rpe>=1&&x.rpe<=10).map(x=>x.rpe!));
  const finished=required>0&&completed.length>=required&&completed.every(x=>requiredReps===null||x.reps!>=requiredReps);
@@ -40,7 +43,7 @@ export function recommendWeight(week:number,day:DayName,exercise:Exercise,allLog
   return {weight:prescribed,status:'plan',reason:maxRpe===0?'No valid RPE recorded. Follow the programmed bench target and monitor technique.':'Completed prescribed reps without maximal exertion. Follow the original bench target; no extra weight added.',previous,isBenchGoal:true};
  }
  // Never infer 1RM or load progression from holds, distances or zero-weight movements.
- if(!numericReps(exercise.reps)||!isLoaded(lastLoad))return {weight:null,status:'none',reason:'Time/distance/bodyweight movements need a manual load choice.',previous,isBenchGoal:false};
+ if(/sec|min|\bm\b/i.test(exercise.reps)||!numericReps(exercise.reps)||!isLoaded(lastLoad))return {weight:null,status:'none',reason:'Time/distance/bodyweight movements need a manual load choice.',previous,isBenchGoal:false};
  if(maxRpe===0)return {weight:roundTo(lastLoad,5),status:'hold',reason:'No valid RPE recorded. Repeat the prior weight until effort is logged.',previous,isBenchGoal:false};
  if(maxRpe>=9)return {weight:roundTo(lastLoad,5),status:'hold',reason:'High RPE: repeat this weight rather than increasing.',previous,isBenchGoal:false};
  if(maxRpe>=8)return {weight:roundTo(lastLoad,5),status:'hold',reason:'RPE 8: maintain the weight and confirm solid form/recovery before progressing.',previous,isBenchGoal:false};
@@ -49,4 +52,5 @@ export function recommendWeight(week:number,day:DayName,exercise:Exercise,allLog
  const suggested=roundTo(lastLoad+step,step);
  return {weight:suggested,status:'increase',reason:`All planned reps completed at max RPE ${maxRpe}. Based on your last completed set (${lastLoad} lb), consider ${suggested} lb (${suggested-lastLoad} lb${dumbbell?' per dumbbell':''} increase after rounding) if equipment allows.`,previous,isBenchGoal:false};
 }
+
 

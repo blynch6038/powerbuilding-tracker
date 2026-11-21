@@ -1,4 +1,6 @@
 import type{Exercise}from './types';
+import {exerciseDays} from './templates';
+import {prescriptionForName} from './exercisePrescriptions';
 const groups:Record<string,string[]>={
  'Barbell Bench Press':['Dumbbell Bench Press','Smith Machine Bench Press','Machine Chest Press','Floor Press'],
  'Barbell Bench Press (Volume)':['Dumbbell Bench Press','Smith Machine Bench Press','Machine Chest Press'],
@@ -22,7 +24,7 @@ const groups:Record<string,string[]>={
  'Overhead Triceps Extension':['Cable Overhead Triceps Extension','Dumbbell Skull Crusher','Rope Pushdown'],
  'Dumbbell Chest Press':['Dumbbell Floor Press','Machine Chest Press','Barbell Bench Press','Smith Machine Bench Press'],
  'Cable Biceps Curl':['Dumbbell Biceps Curl','EZ-Bar Curl','RKC Plank'],
- 'RKC Plank':['Cable Biceps Curl','Forearm Plank','Hollow-Body Hold','Dead Bug'],
+ 'RKC Plank':['Cable Biceps Curl','EZ-Bar Curl','Dumbbell Biceps Curl','Forearm Plank','Hollow-Body Hold','Dead Bug'],
  'Conventional Deadlift':['Trap-Bar Deadlift','Sumo Deadlift','Rack Pull'],
  'Trap-Bar Deadlift':['Conventional Deadlift','Sumo Deadlift','Rack Pull'],
  'Romanian Deadlift':['Dumbbell Romanian Deadlift','Single-Leg Romanian Deadlift','Good Morning'],
@@ -52,8 +54,12 @@ export function resolveExercise(exercise:Exercise,replacement=exercise.name):Exe
  const displayName=canonicalExerciseName(replacement);
  const identityName=displayName==='Machine Seated Calf Raise'?'Machine Seated Calf Raise':displayName==='Cable Bicep Curl'?'Cable Biceps Curl':displayName==='Chest-Supported Dumbbell Row'?'Chest-Supported Row':replacement;
  const original=exercise.originalName||exercise.name;
- const reps=identityName==='Cable Biceps Curl'?'10–12':exercise.originalReps||exercise.reps;
- const sets=identityName==='Cable Biceps Curl'&&exercise.id==='rkc-plank'?3:exercise.sets;
+ const sameMovement=displayName===canonicalExerciseName(original);
+ const baseline=exerciseDays.flat().find(([name])=>name===original);
+ const reduction=baseline?Math.max(0,baseline[1]-exercise.sets):0;
+ const prescription=prescriptionForName(displayName)??{sets:3,reps:'8–12'};
+ const reps=sameMovement?(exercise.originalReps||exercise.reps):prescription.reps;
+ const sets=sameMovement?exercise.sets:exercise.sets===0?0:Math.max(1,prescription.sets-reduction);
  if(identityName===original || original==='Flat Dumbbell Press'&&canonicalExerciseName(replacement)==='Dumbbell Chest Press')return {...exercise,name:canonicalExerciseName(replacement),reps,sets};
  return {...exercise,name:canonicalExerciseName(replacement),reps,sets,target:null,
   id:exercise.id+'--sub--'+identityName.toLowerCase().replace(/[^a-z0-9]+/g,'-')};
@@ -61,4 +67,5 @@ export function resolveExercise(exercise:Exercise,replacement=exercise.name):Exe
 export function substitutionWeeks(program:import('./types').TrainingWeek[],week:number,day:import('./types').DayName,id:string,future:boolean):number[]{
  return program.filter(w=>w.week>=week&&(future||w.week===week)&&w.workouts.some(d=>d.day===day&&d.exercises.some(e=>e.id===id))).map(w=>w.week);
 }
+
 

@@ -59,3 +59,9 @@ const benchChoice={id:'choice',user_id:'test',week:2,day:'Monday',exercise_id:'b
 assert.equal(benchPlan('test',[benchChoice])[1].weight,140);
 assert.equal(benchPlan('other',[benchChoice])[1].weight,160);
 assert.equal(benchPlan('test',[benchChoice,{...benchChoice,id:'volume-choice',day:'Friday',exercise_id:'barbell-bench-press-volume'}])[1].weight,null);
+
+
+const ezCurl={...row,day:'Wednesday',exercise_id:'rkc-plank--sub--ez-bar-curl',weight:50,reps:12};
+assert(loaded(ezCurl));assert.equal(setVolume(ezCurl),600);
+assert(!loaded({...row,exercise_id:'seated-cable-row--sub--forearm-plank',reps:30}));
+assert(!loaded({...row,exercise_id:'seated-cable-row--sub--suitcase-carry',reps:30}));

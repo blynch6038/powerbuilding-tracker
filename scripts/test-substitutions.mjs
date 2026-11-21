@@ -91,3 +91,21 @@ for (const week of program) {
  assert.equal(calf.reps,'12–15');
  assert(alternativeExercises(calf).includes('Machine Seated Calf Raise'));
 }
+
+
+// Every listed substitution must have an explicit prescription and correct measurement units.
+const catalogBuild=await build({stdin:{contents:"export {prescriptionForName} from './src/exercisePrescriptions';",resolveDir:process.cwd()},bundle:true,platform:'node',format:'esm',write:false});
+const {prescriptionForName}=await import('data:text/javascript;base64,'+Buffer.from(catalogBuild.outputFiles[0].text).toString('base64'));
+for(const week of program)for(const day of week.workouts)for(const original of day.exercises){
+ for(const choice of alternativeExercises(original)){
+  assert(prescriptionForName(choice),'Missing prescription for '+choice);
+  const selected=resolveExercise(original,choice);
+  assert.equal(selected.sets===0,original.sets===0);
+  if(canonicalExerciseName(choice)!==canonicalExerciseName(original.originalName||original.name))assert.equal(selected.reps,prescriptionForName(choice).reps);
+ }
+}
+const ez=resolveExercise(slot,'EZ-Bar Curl');
+assert.equal(ez.id,'rkc-plank--sub--ez-bar-curl');assert.equal(ez.sets,3);assert.equal(ez.reps,'10–12');
+assert.equal(resolveExercise(slot,'Dead Bug').reps,'10–12/side');
+assert.equal(resolveExercise(slot,'Forearm Plank').reps,'20–30 sec');
+console.log('Audited all substitution prescriptions across all ten weeks.');
