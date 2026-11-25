@@ -48,6 +48,21 @@ export async function synchronize(userId:string):Promise<number|undefined>{
    const local=await db.substitutions.get(row.id);
    if(!local||(!local.dirty&&row.updated_at>local.updated_at))await db.substitutions.put({...row,dirty:0} as ExerciseSubstitution);
   }
+  // One atomic upsert; returned rows contain the winning server versions.
+  const pendingSubs=await db.substitutions.where('dirty').equals(1).filter(x=>x.user_id===userId).toArray();
+  if(pendingSubs.length){
+   const payload=pendingSubs.map(({dirty,...row})=>row);
+   const {data,error}=await supabase.from('exercise_substitutions').upsert(payload,{onConflict:'id'}).select();
+   if(error)throw error;
+   const winners=new Map((data as ExerciseSubstitution[]).map(row=>[row.id,row]));
+   if(winners.size!==pendingSubs.length||pendingSubs.some(row=>!winners.has(row.id)))throw new Error('Incomplete exercise sync response; pending choices retained');
+   await db.transaction('rw',db.substitutions,async()=>{
+    for(const row of pendingSubs){
+     const current=await db.substitutions.get(row.id);
+     if(current?.updated_at===row.updated_at)await db.substitutions.put({...winners.get(row.id)!,dirty:0});
+    }
+   });
+  }
   const remoteNotes=await cloudRows<ExerciseNote>('exercise_notes',userId);
   for(const row of remoteNotes)await db.notes.put({...row,dirty:0});
   const pendingNotes=await db.notes.where('dirty').equals(1).filter(x=>x.user_id===userId).toArray();
@@ -66,14 +81,6 @@ export async function synchronize(userId:string):Promise<number|undefined>{
    if(data==='conflict'){conflicts++;continue;}
    const current=await db.logs.get(item.id);
    if(current?.updated_at===item.updated_at)await db.logs.update(item.id,{dirty:0});
-  }
-  const pendingSubs=await db.substitutions.where('dirty').equals(1).filter(x=>x.user_id===userId).toArray();
-  for(const row of pendingSubs){
-   const {dirty,...payload}=row;
-   const {error}=await supabase.from('exercise_substitutions').upsert(payload,{onConflict:'id'});
-   if(error)throw error;
-   const current=await db.substitutions.get(row.id);
-   if(current?.updated_at===row.updated_at)await db.substitutions.update(row.id,{dirty:0});
   }
   if(conflicts)console.warn('Powerbuilding sync preserved pending local conflicts:',conflicts);
   return pending.length+pendingSubs.length;
