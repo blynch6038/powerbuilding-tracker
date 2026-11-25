@@ -116,3 +116,21 @@ for(const week of program.slice(0,9)){
  assert.deepEqual(alternativeExercises(biceps),['Cable Bicep Curl','EZ-Bar Curl','Dumbbell Biceps Curl']);
  for(const option of alternativeExercises(biceps))assert.equal(resolveExercise(biceps,option).reps,'10–12');
 }
+
+
+ // Repeated future choices use the stable program slot rather than the resolved log ID.
+ const replacementSlot=program[4].workouts[2].exercises[5];
+ const selections=new Map();
+ const applyChoice=(week,name,future)=>{
+  for(const w of substitutionWeeks(program,week,'Wednesday',replacementSlot.id,future))selections.set(w,name);
+ };
+ applyChoice(5,'Cable Bicep Curl',true);
+ applyChoice(5,'EZ-Bar Curl',true);
+ assert.deepEqual([...selections.keys()],[5,6,7,8,9]);
+ for(const [w,name] of selections)assert.equal(resolveExercise(program[w-1].workouts[2].exercises[5],name).id,'rkc-plank--sub--ez-bar-curl');
+ applyChoice(6,'Cable Bicep Curl',false);
+ assert.equal(selections.get(6),'Cable Bicep Curl');
+ assert.equal(selections.get(5),'EZ-Bar Curl');
+ assert.equal(selections.get(7),'EZ-Bar Curl');
+ assert(!selections.has(4)&&!selections.has(10));
+ console.log('Repeated replacement scope regression passed.');
