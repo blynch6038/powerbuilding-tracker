@@ -28,7 +28,7 @@ const historyExerciseName=(ex:Exercise,id:string)=>id===ex.id?canonicalExerciseN
 function App(){
 const[resetMode,setResetMode]=useState(false),[resetSent,setResetSent]=useState(false),[resetBusy,setResetBusy]=useState(false),[user,setUser]=useState<User|null>(null),[loading,setLoading]=useState(true),[email,setEmail]=useState(''),[password,setPassword]=useState(''),[error,setError]=useState(''),[week,setWeek]=useState(1),[day,setDay]=useState<DayName>('Monday'),[tab,setTab]=useState<TabName>(location.hash==='#history'?'History':'Today'),[logs,setLogs]=useState<WorkoutLog[]>([]),[cloudLogs,setCloudLogs]=useState<WorkoutLog[]>([]),[substitutions,setSubstitutions]=useState<ExerciseSubstitution[]>([]),[status,setStatus]=useState('Ready'),[newPassword,setNewPassword]=useState(''),[passwordSetup,setPasswordSetup]=useState(false);
 const [overview,setOverview]=useState(false),[order,setOrder]=useState<string[]>([]);
-const [applyFuture,setApplyFuture]=useState(false);
+const [applyFuture,setApplyFuture]=useState(true);
 const [restoredUser,setRestoredUser]=useState<string|null>(null);
 useEffect(()=>{
  setRestoredUser(null);
