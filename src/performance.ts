@@ -1,15 +1,15 @@
 import type {WorkoutLog,ExerciseSubstitution} from './types';
 import {program} from './program';
-import {volumeMultiplier} from './loadConvention';
+import {volumeMultiplier,isFarmerCarry} from './loadConvention';
 import {prescriptionForName} from './exercisePrescriptions';
 import {resolveExercise} from './substitutions';
 export const benchIDs=new Set(['barbell-bench-press','barbell-bench-press-volume','readiness-single','goal-attempt']);
 export const position=(r:Pick<WorkoutLog,'week'|'day'>)=>r.week*10+['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'].indexOf(r.day);
 export const completed=(r:WorkoutLog)=>r.done&&!r.deleted_at&&!r.exercise_id.endsWith('-warmup');
-export function loaded(r:WorkoutLog){const ex=program[r.week-1]?.workouts.find(w=>w.day===r.day)?.exercises.find(e=>e.id===r.exercise_id||r.exercise_id.startsWith(e.id+'--sub--'));const reps=r.exercise_id.includes('--sub--')?(prescriptionForName(r.exercise_id.split('--sub--').slice(-1)[0].replace(/-/g,' '))?.reps??'8–12'):(ex?.originalReps||ex?.reps);return completed(r)&&!!ex&&!!reps&&!/sec|min|\bm\b/i.test(reps)&&r.weight!==null&&r.weight>0&&Number.isFinite(r.weight)&&r.reps!==null&&r.reps>0&&Number.isFinite(r.reps);}
+export function loaded(r:WorkoutLog){const ex=program[r.week-1]?.workouts.find(w=>w.day===r.day)?.exercises.find(e=>e.id===r.exercise_id||r.exercise_id.startsWith(e.id+'--sub--'));const reps=r.exercise_id.includes('--sub--')?(prescriptionForName(r.exercise_id.split('--sub--').slice(-1)[0].replace(/-/g,' '))?.reps??'8–12'):(ex?.originalReps||ex?.reps);return completed(r)&&!!ex&&!!reps&&!/sec|min|\bm\b|\byd\b/i.test(reps)&&r.weight!==null&&r.weight>0&&Number.isFinite(r.weight)&&r.reps!==null&&r.reps>0&&Number.isFinite(r.reps);}
 export function estimatedMax(weight:number,reps:number){return weight>0&&Number.isFinite(weight)&&Number.isInteger(reps)&&reps>=1&&reps<=10?Math.trunc(reps===1?weight:weight*(30+reps)/30):null;}
 export const setVolume=(row:WorkoutLog):number=>loaded(row)?row.weight!*row.reps!*volumeMultiplier(row.exercise_id):0;
-export interface WeeklyProgress {week:number;benchLoad:number|null;estimatedMax:number|null;volume:number|null;averageRPE:number|null}
+export interface WeeklyProgress {carryDistance?:number|null;carryVolume?:number|null;week:number;benchLoad:number|null;estimatedMax:number|null;volume:number|null;averageRPE:number|null}
 export interface BenchPlanPoint {week:number;weight:number|null}
 export function benchPlan(userId:string,choices:ExerciseSubstitution[]=[]):BenchPlanPoint[]{
  return program.map(week=>{
@@ -29,7 +29,8 @@ export function weeklyProgress(logs:WorkoutLog[],userId:string):WeeklyProgress[]
   const bench=weighted.filter(row=>benchIDs.has(row.exercise_id));
   const estimates=bench.map(row=>estimatedMax(row.weight!,row.reps!)).filter((value):value is number=>value!==null);
   const rpes=rows.map(row=>row.rpe).filter((rpe):rpe is number=>rpe!==null&&Number.isFinite(rpe)&&rpe>=1&&rpe<=10);
-  return {week,benchLoad:bench.length?Math.max(...bench.map(row=>row.weight!)):null,estimatedMax:estimates.length?Math.max(...estimates):null,volume:weighted.length?weighted.reduce((total,row)=>total+setVolume(row),0):null,averageRPE:rpes.length?rpes.reduce((total,rpe)=>total+rpe,0)/rpes.length:null};
+  const carries=rows.filter(r=>isFarmerCarry(r.exercise_id)&&(r.reps??0)>0);const loadedCarries=carries.filter(r=>(r.weight??0)>0);
+  return {carryDistance:carries.length?carries.reduce((n,r)=>n+r.reps!,0):null,carryVolume:loadedCarries.length?loadedCarries.reduce((n,r)=>n+2*r.weight!*r.reps!,0):null,week,benchLoad:bench.length?Math.max(...bench.map(row=>row.weight!)):null,estimatedMax:estimates.length?Math.max(...estimates):null,volume:weighted.length?weighted.reduce((total,row)=>total+setVolume(row),0):null,averageRPE:rpes.length?rpes.reduce((total,rpe)=>total+rpe,0)/rpes.length:null};
  });
 }
 export function previousSession(logs:WorkoutLog[],exercise:string,week:number,day:WorkoutLog['day']){const earlier=logs.filter(r=>completed(r)&&r.exercise_id===exercise&&position(r)<position({week,day}));const last=Math.max(...earlier.map(position));return earlier.filter(r=>position(r)===last).sort((a,b)=>a.set_number-b.set_number);}
