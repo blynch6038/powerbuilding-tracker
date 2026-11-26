@@ -1,5 +1,9 @@
 # Power Builder web change log
 
+## 2026-11-26 — Weekly completion and catch-up workouts
+
+Track prescribed working sets by week, distinguish future, open, completed and intentionally skipped sets, and select earlier unfinished sets for catch-up without duplicating the original workout identity. Weekly adherence, estimated time, conservative accessory suggestions and completion timestamps are included. Existing account-scoped offline synchronization is extended with backward-compatible database metadata. Device acceptance remains required.
+
 ## 2026-11-26 — Carry distance and cross-day recommendations
 
 Farmer Carry prescribes 50 yards per set, defaults to 50 yards in the workout entry, and charts weekly distance and two-hand loaded lb-yards separately from lifting volume. Weight recommendations find earlier workout days and matching substituted movements; existing RPE, last-set and bench protections remain. Historical completed carry distances were normalized for the two existing participants. Release candidate pending production acceptance.

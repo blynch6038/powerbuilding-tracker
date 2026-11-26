@@ -36,7 +36,7 @@ export async function synchronize(userId:string):Promise<number|undefined>{
   for(const row of remote||[]){
    const local=await db.logs.get(row.id);
    // A never-completed blank form field is superseded by a completed cloud import.
-   const emptyDraft=local?.dirty===1&&!local.done&&local.weight==null&&local.reps==null;
+   const emptyDraft=local?.dirty===1&&!local.done&&!local.skipped&&local.weight==null&&local.reps==null;
    if(!local||emptyDraft&&row.done||(!local.dirty&&row.updated_at>local.updated_at)){
     await db.logs.put({...row,dirty:0} as WorkoutLog);
    }else if(local.dirty&&row.updated_at>local.updated_at){
@@ -76,7 +76,7 @@ export async function synchronize(userId:string):Promise<number|undefined>{
   const pending=await db.logs.where('dirty').equals(1).filter(x=>x.user_id===userId).toArray();
   for(const item of pending){
    const{dirty,...p}=item;
-   const{data,error}=await supabase.rpc('sync_set_log',{p_id:p.id,p_week:p.week,p_day:p.day,p_exercise_id:p.exercise_id,p_set_number:p.set_number,p_weight:p.weight,p_reps:p.reps,p_rpe:p.rpe,p_done:p.done,p_updated_at:p.updated_at});
+   const{data,error}=await supabase.rpc('sync_set_log_v2',{p_id:p.id,p_week:p.week,p_day:p.day,p_exercise_id:p.exercise_id,p_set_number:p.set_number,p_weight:p.weight,p_reps:p.reps,p_rpe:p.rpe,p_done:p.done,p_updated_at:p.updated_at,p_completed_at:p.completed_at??null,p_skipped:p.skipped??false});
    if(error)throw error;
    if(data==='conflict'){conflicts++;continue;}
    const current=await db.logs.get(item.id);

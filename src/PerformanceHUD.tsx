@@ -28,9 +28,9 @@ export function WorkoutHUD({userId,week,day,exercises,logs,save,onSwap,onOvervie
  useEffect(()=>{setSelected(null);setEditing(null)},[identity]);
  const rows=(ex:Exercise)=>logs.filter(l=>l.week===week&&l.day===day&&l.exercise_id===ex.id&&!l.deleted_at);
  const retired=(ex:Exercise,n:number)=>logs.some(l=>l.week===week&&l.day===day&&l.exercise_id===ex.id&&l.set_number===n&&!!l.deleted_at);
- const next=choices.find(ex=>Array.from({length:ex.sets},(_,i)=>i+1).some(n=>!retired(ex,n)&&!rows(ex).some(l=>l.set_number===n&&l.done)));
+ const next=choices.find(ex=>Array.from({length:ex.sets},(_,i)=>i+1).some(n=>!retired(ex,n)&&!rows(ex).some(l=>l.set_number===n&&(l.done||l.skipped))));
  const base=choices.find(e=>e.id===selected)||next||choices[0];
- const n=editing??(Array.from({length:base?.sets||0},(_,i)=>i+1).find(n=>!retired(base,n)&&!rows(base).some(l=>l.set_number===n&&l.done))??1);
+ const n=editing??(Array.from({length:base?.sets||0},(_,i)=>i+1).find(n=>!retired(base,n)&&!rows(base).some(l=>l.set_number===n&&(l.done||l.skipped)))??1);
  const pair=base?.id.endsWith('-warmup')?prescribedWarmups[n-1]:null;
  const exercise=base&&pair?{...base,target:pair[0],reps:String(pair[1])}:base;
  const row=exercise?rows(exercise).find(l=>l.set_number===n):undefined;
