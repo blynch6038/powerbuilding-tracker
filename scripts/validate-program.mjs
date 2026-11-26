@@ -13,7 +13,7 @@ const normal=[
  [['barbell-bench-press',5,'5'],['incline-dumbbell-press',3,'8'],['close-grip-bench-press',3,'6'],['seated-cable-row',3,'10'],['rope-triceps-pushdown',3,'12'],['weighted-plank',3,'30 sec']],
  [['barbell-back-squat',4,'5'],['hack-squat-machine',3,'8–10'],['leg-press',3,'10'],['seated-leg-curl',3,'12'],['standing-calf-raise',3,'12–15'],['cable-crunch',3,'12']],
  [['machine-chest-press',3,'10'],['dumbbell-floor-press',3,'8'],['seated-dumbbell-shoulder-press',3,'10'],['cable-serratus-punch',3,'12/side'],['overhead-triceps-extension',3,'12'],['rkc-plank',3,'20–30 sec']],
- [['conventional-deadlift',3,'4'],['romanian-deadlift',2,'8'],['chest-supported-row',3,'10'],['lying-leg-curl',3,'10'],['back-extension',2,'12'],['farmer-carry',3,'30 m']],
+ [['conventional-deadlift',3,'4'],['romanian-deadlift',2,'8'],['chest-supported-row',3,'10'],['lying-leg-curl',3,'10'],['back-extension',2,'12'],['farmer-carry',3,'50 yd']],
  [['barbell-bench-press-volume',4,'8'],['paused-bench-press',3,'3'],['flat-dumbbell-press',3,'10'],['lat-pulldown',3,'10'],['cable-chest-fly',2,'12'],['pallof-press',3,'12/side']]
 ];
 const benchHeavy=[[5,5,155],[5,5,160],[5,4,165],[5,4,170],[5,3,175],[5,3,180],[4,3,185],[3,2,190],[3,1,195]];
