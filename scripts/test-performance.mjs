@@ -43,7 +43,7 @@ const chartBench={...row,weight:185,reps:4,rpe:8};
 const chartDB={...row,id:'db',exercise_id:'incline-dumbbell-press',weight:45,reps:10,rpe:7.5};
 const chartTimed={...row,id:'hold',week:2,exercise_id:'weighted-plank',weight:0,reps:30,rpe:6};
 const chartNoise=[{...row,id:'foreign',user_id:'other',weight:999,rpe:10},{...row,id:'draft',week:3,done:false},{...row,id:'deleted',week:4,deleted_at:'today'},{...row,id:'warm',exercise_id:row.exercise_id+'-warmup',weight:999,rpe:10},{...row,id:'unknown',exercise_id:'unknown-exercise',rpe:10}];
-assert.deepEqual(weeklyProgress([chartTimed,chartDB,chartBench,...chartNoise],row.user_id),[{week:1,benchLoad:185,estimatedMax:209,volume:1640,averageRPE:7.75},{week:2,benchLoad:null,estimatedMax:null,volume:null,averageRPE:6}]);
+assert.deepEqual(weeklyProgress([chartTimed,chartDB,chartBench,...chartNoise],row.user_id),[{carryDistance:null,carryVolume:null,week:1,benchLoad:185,estimatedMax:209,volume:1640,averageRPE:7.75},{carryDistance:null,carryVolume:null,week:2,benchLoad:null,estimatedMax:null,volume:null,averageRPE:6}]);
 assert.deepEqual(weeklyProgress([chartBench],'other'),[]);
 assert.deepEqual(weeklyProgress([],'test'),[]);
 assert.equal(weeklyProgress([{...chartBench,weight:150}],row.user_id)[0].estimatedMax,170);
@@ -65,3 +65,7 @@ const ezCurl={...row,day:'Wednesday',exercise_id:'rkc-plank--sub--ez-bar-curl',w
 assert(loaded(ezCurl));assert.equal(setVolume(ezCurl),600);
 assert(!loaded({...row,exercise_id:'seated-cable-row--sub--forearm-plank',reps:30}));
 assert(!loaded({...row,exercise_id:'seated-cable-row--sub--suitcase-carry',reps:30}));
+
+const carry={...row,id:'carry',day:'Thursday',exercise_id:'farmer-carry',weight:60,reps:50};
+const carryWeek=weeklyProgress([carry,{...carry,id:'foreign-carry',user_id:'other',weight:999},{...carry,id:'deleted-carry',deleted_at:'today'}],'test')[0];
+assert.equal(carryWeek.carryDistance,50);assert.equal(carryWeek.carryVolume,6000);assert.equal(carryWeek.volume,null);

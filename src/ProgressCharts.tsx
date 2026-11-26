@@ -4,10 +4,10 @@ import {weeklyProgress,benchPlan,type WeeklyProgress} from './performance';
 import './progress.css';
 import BenchProgression from './BenchProgression';
 
-type Metric='estimatedMax'|'volume'|'averageRPE';
+type Metric='estimatedMax'|'volume'|'averageRPE'|'carryDistance'|'carryVolume';
 const format=(value:number,metric:Metric)=>value.toLocaleString(undefined,{maximumFractionDigits:metric==='estimatedMax'?0:1});
 function MetricChart({title,metric,weeks,unit}:{title:string;metric:Metric;weeks:WeeklyProgress[];unit:string}){
- const points=weeks.flatMap(week=>week[metric]===null?[]:[{week:week.week,value:week[metric]!}]);
+ const points=weeks.flatMap(week=>week[metric]==null?[]:[{week:week.week,value:week[metric]!}]);
  if(!points.length)return null;
  const latest=points[points.length-1],highest=Math.max(...points.map(point=>point.value));
  const ceiling=metric==='averageRPE'?10:metric==='volume'?Math.max(1000,Math.ceil(highest/1000)*1000):Math.max(100,Math.ceil(highest/100)*100);
@@ -36,6 +36,8 @@ export default function ProgressCharts({logs,userId,choices}:{logs:WorkoutLog[];
   <MetricChart title="Bench estimated 1RM · lb" metric="estimatedMax" weeks={weeks} unit="lb"/>
   <MetricChart title="Working volume · lb × reps" metric="volume" weeks={weeks} unit="lb × reps"/>
   <MetricChart title="Average actual RPE" metric="averageRPE" weeks={weeks} unit=""/>
+  <MetricChart title="Farmer Carry distance" metric="carryDistance" weeks={weeks} unit="yd"/>
+  <MetricChart title="Farmer Carry loaded volume" metric="carryVolume" weeks={weeks} unit="lb-yd"/>
   <p className="progress-note">Actual values and summary metrics use completed working sets only. Plan values are prescribed targets; unlogged actual weeks have no green point. Dumbbell volume counts both arms; warm-ups, deleted sets and timed/distance movements are excluded from lifting volume. Estimated maxes use 1–10 reps and discard decimals without rounding up.</p>
  </div>;
 }
