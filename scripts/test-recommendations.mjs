@@ -80,3 +80,9 @@ for (const [id,day,count,reps] of [
 }
 const barbellSub='incline-dumbbell-press--sub--incline-barbell-press';
 assert.equal(recommendWeight(2,'Monday',ex(barbellSub,'Incline Barbell Press',3,'8'),sets('Monday',barbellSub,3,40,8,7)).weight,42.5);
+
+const mondayRows=sets('Monday','seated-cable-row',3,100,10,7).map(r=>({...r,week:5}));
+const thursdayRow=ex('chest-supported-row--sub--seated-cable-row','Seated Cable Row',3,'10');
+assert.equal(recommendWeight(5,'Thursday',thursdayRow,mondayRows).weight,105);
+assert.equal(recommendWeight(5,'Thursday',thursdayRow,mondayRows.map(r=>({...r,rpe:8}))).weight,100);
+assert.equal(recommendWeight(5,'Monday',thursdayRow,mondayRows).weight,null);
