@@ -80,6 +80,7 @@ async function save(ex:Exercise,n:number,patch:WorkoutPatch,originalDay:DayName=
 const id=idFor(user!.id,week,originalDay,ex.id,n);const old=await db.logs.get(id)||displayedLogs.find(l=>l.id===id);
 if(old?.deleted_at)throw new Error('This set was deleted in shared history');
 const record={id,user_id:user!.id,week,day:originalDay,exercise_id:ex.id,set_number:n,weight:null,reps:null,rpe:null,done:false,deleted_at:null,...old,...patch,updated_at:new Date().toISOString(),dirty:1 as const};
+if(record.done){record.skipped=false;record.completed_at=old?.done?old.completed_at??null:new Date().toISOString()}else{record.completed_at=null;if(patch.skipped===true)record.skipped=true}
 if((record.weight!==null&&(!Number.isFinite(record.weight)||record.weight<0||record.weight>3000))||(record.reps!==null&&(!Number.isInteger(record.reps)||record.reps<0||record.reps>1000))||(record.rpe!==null&&(!Number.isFinite(record.rpe)||record.rpe<1||record.rpe>10)))throw new Error('Invalid set values');
 if(record.done&&(record.weight===null||record.reps===null||record.reps<=0))throw new Error('Enter weight and actual reps before completing this set');
 await db.logs.put(record);await reload();setStatus('Saved on device • pending sync');
