@@ -1,5 +1,9 @@
 # Power Builder web change log
 
+## 2026-11-26 — Carry distance and cross-day recommendations
+
+Farmer Carry prescribes 50 yards per set, defaults to 50 yards in the workout entry, and charts weekly distance and two-hand loaded lb-yards separately from lifting volume. Weight recommendations find earlier workout days and matching substituted movements; existing RPE, last-set and bench protections remain. Historical completed carry distances were normalized for the two existing participants. Release candidate pending production acceptance.
+
 ## 2026-11-03 — Exercise weights grouped by body part
 
 Individual exercise weight charts on web and exercise personal records on iOS are organized under their primary body part, with exercises sorted by name and empty groups hidden. Substitutions use the movement actually performed, keeping separate exercise histories intact. Both apps share the classification source. Bench progression and the three summary charts through Average Actual RPE retain their existing layout and calculations. No history or prescribed exercises are changed.
