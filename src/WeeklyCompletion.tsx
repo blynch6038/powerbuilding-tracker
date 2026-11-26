@@ -21,7 +21,7 @@ export default function WeeklyCompletion({week,day,userId,logs,choices,save}:Pro
  {!mode&&available.map(s=><label key={s.key} style={{display:'block'}}><input type="checkbox" checked={selected.includes(s.key)} onChange={e=>setSelected(v=>e.target.checked?[...v,s.key]:v.filter(k=>k!==s.key))}/> {label(s.day)} · {s.exercise.name} · Set {s.setNumber}</label>)}
  {!mode&&summary.skipped.map(s=><div key={s.key}>{label(s.day)} · {s.exercise.name} · Set {s.setNumber} — skipped <button onClick={()=>void save(s,{skipped:false,done:false}).catch(e=>alert(String(e)))}>Reopen</button></div>)}<button disabled={!chosen.length&&!mode} onClick={()=>setMode(!mode)}>{mode?'Return to selection':'Start catch-up workout'}</button>
  {mode&&chosen.map(s=><CatchUpSet key={s.key} set={s} logs={own} today={day} save={save}/>)}
- {mode&&!chosen.length&&<p>Selected catch-up sets complete.</p>}</details></section>;
+ {mode&&!chosen.length&&<p>No selected open sets remain.</p>}</details></section>;
 }
 function CatchUpSet({set:s,logs,today,save}:{set:WeeklySet;logs:WorkoutLog[];today:DayName;save:Props['save']}){
  const row=logs.find(r=>r.id===s.key);
