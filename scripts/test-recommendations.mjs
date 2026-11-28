@@ -86,3 +86,10 @@ const thursdayRow=ex('chest-supported-row--sub--seated-cable-row','Seated Cable 
 assert.equal(recommendWeight(5,'Thursday',thursdayRow,mondayRows).weight,105);
 assert.equal(recommendWeight(5,'Thursday',thursdayRow,mondayRows.map(r=>({...r,rpe:8}))).weight,100);
 assert.equal(recommendWeight(5,'Monday',thursdayRow,mondayRows).weight,null);
+
+// Fractional historical dumbbell loads stay unchanged on hold and progress by exactly 5 lb.
+const fractionalDB=sets('Monday',dbPress.id,3,32.5,8,7);
+assert.equal(recommendWeight(2,'Monday',dbPress,fractionalDB).weight,37.5);
+assert.match(recommendWeight(2,'Monday',dbPress,fractionalDB).reason,/5 lb per dumbbell increase/);
+assert.equal(recommendWeight(2,'Monday',dbPress,fractionalDB.map(r=>({...r,rpe:8}))).weight,32.5);
+assert.equal(recommendWeight(2,'Monday',dbPress,fractionalDB.map(r=>({...r,rpe:null}))).weight,32.5);
