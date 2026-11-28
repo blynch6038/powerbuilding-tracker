@@ -52,23 +52,29 @@ export async function synchronize(userId:string,onRemoteLogs?:(rows:WorkoutLog[]
   const remoteSubs=await cloudRows<ExerciseSubstitution>('exercise_substitutions',userId);
   for(const row of remoteSubs||[]){
    const local=await db.substitutions.get(row.id);
-   if(!local||(!local.dirty&&row.updated_at>local.updated_at))await db.substitutions.put({...row,dirty:0} as ExerciseSubstitution);
+   if(local?.dirty){
+    if(local.version!==row.version)await db.substitutions.put({...local,conflictRemoteChoice:row});
+    continue;
+   }
+   if(!local||local.version!==row.version)await db.substitutions.put({...row,dirty:0,conflictRemoteChoice:undefined} as ExerciseSubstitution);
   }
-  // One atomic upsert; returned rows contain the winning server versions.
-  const pendingSubs=await db.substitutions.where('dirty').equals(1).filter(x=>x.user_id===userId).toArray();
-  if(pendingSubs.length){
-   const payload=pendingSubs.map(({dirty,...row})=>row);
-   const {data,error}=await supabase.from('exercise_substitutions').upsert(payload,{onConflict:'id'}).select();
+  const pendingSubs=await db.substitutions.where('dirty').equals(1)
+   .filter(x=>x.user_id===userId&&!x.conflictRemoteChoice).toArray();
+  for(const row of pendingSubs){
+   const{data,error}=await supabase.rpc('sync_exercise_substitution_v2',{
+    p_id:row.id,p_week:row.week,p_day:row.day,p_exercise_id:row.exercise_id,
+    p_replacement:row.replacement,p_expected_version:row.version??null
+   });
    if(error)throw error;
-   const winners=new Map((data as ExerciseSubstitution[]).map(row=>[row.id,row]));
-   if(winners.size!==pendingSubs.length||pendingSubs.some(row=>!winners.has(row.id)))throw new Error('Incomplete exercise sync response; pending choices retained');
-   await db.transaction('rw',db.substitutions,async()=>{
-    for(const row of pendingSubs){
-     const current=await db.substitutions.get(row.id);
-     if(current?.updated_at===row.updated_at)await db.substitutions.put({...winners.get(row.id)!,dirty:0});
-    }
+   if(data==='conflict'){conflicts++;continue;}
+   if(data!=='ok')throw new Error('Unexpected versioned substitution sync response; pending choice retained');
+   const current=await db.substitutions.get(row.id);
+   if(current?.updated_at===row.updated_at)await db.substitutions.put({
+    ...current,dirty:0,version:(row.version??0)+1,conflictRemoteChoice:undefined
    });
   }
+  conflicts+=await db.substitutions.where('dirty').equals(1)
+   .filter(x=>x.user_id===userId&&!!x.conflictRemoteChoice).count();
   const remoteNotes=await cloudRows<ExerciseNote>('exercise_notes',userId);
   for(const row of remoteNotes)await db.notes.put({...row,dirty:0});
   const pendingNotes=await db.notes.where('dirty').equals(1).filter(x=>x.user_id===userId).toArray();
