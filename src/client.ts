@@ -22,12 +22,13 @@ export async function cloudRows<T>(table:'set_logs'|'exercise_substitutions'|'ex
  }
 }
 let syncing=false;
-export async function synchronize(userId:string):Promise<number|undefined>{
+export async function synchronize(userId:string,onRemoteLogs?:(rows:WorkoutLog[])=>void):Promise<number|undefined>{
  if(syncing||!navigator.onLine)return;
  syncing=true;
  try{
   // Pull first: a stale local pending record must not prevent the 96 imported Week 1 rows from appearing.
   const remote=await cloudRows<WorkoutLog>('set_logs',userId);
+  onRemoteLogs?.(remote);
   // A successful full pull is authoritative for already-synced history.
   // Keep offline edits; remove clean cache rows deleted from the server.
   const remoteIDs=new Set(remote.map(row=>row.id));
