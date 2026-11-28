@@ -97,6 +97,14 @@ export async function synchronize(userId:string,onRemoteLogs?:(rows:WorkoutLog[]
    const current=await db.logs.get(item.id);
    if(current?.updated_at===item.updated_at)await db.logs.update(item.id,{dirty:0,version:(expected??0)+1,conflictRemote:undefined,restore_deleted:false});
   }
+  // Reuse the local cache snapshot to refresh the view after uploads instead of
+  // making a second full-history request from the app shell.
+  if(onRemoteLogs){
+   const snapshot=new Map(remote.map(row=>[row.id,row]));
+   const cleanCache=await db.logs.where('user_id').equals(userId).filter(row=>!row.dirty).toArray();
+   for(const row of cleanCache)snapshot.set(row.id,row);
+   onRemoteLogs([...snapshot.values()]);
+  }
   if(conflicts)console.warn('Powerbuilding sync preserved pending local conflicts:',conflicts);
   return pending.length+pendingSubs.length;
  }finally{syncing=false;}
