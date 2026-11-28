@@ -84,12 +84,12 @@ export async function synchronize(userId:string,onRemoteLogs?:(rows:WorkoutLog[]
    const{dirty,...p}=item;
    if(p.conflictRemote){conflicts++;continue;}
    const expected=p.version??null;
-   const{data,error}=await supabase.rpc('sync_set_log_v3',{p_id:p.id,p_week:p.week,p_day:p.day,p_exercise_id:p.exercise_id,p_set_number:p.set_number,p_weight:p.weight,p_reps:p.reps,p_rpe:p.rpe,p_done:p.done,p_completed_at:p.completed_at??null,p_skipped:p.skipped??false,p_expected_version:expected,p_deleted:!!p.deleted_at});
+   const{data,error}=await supabase.rpc('sync_set_log_v3',{p_id:p.id,p_week:p.week,p_day:p.day,p_exercise_id:p.exercise_id,p_set_number:p.set_number,p_weight:p.weight,p_reps:p.reps,p_rpe:p.rpe,p_done:p.done,p_completed_at:p.completed_at??null,p_skipped:p.skipped??false,p_expected_version:expected,p_deleted:!!p.deleted_at,p_restore:!!p.restore_deleted});
    if(error)throw error;
    if(data==='conflict'){conflicts++;continue;}
    if(data!=='ok')throw new Error('Unexpected versioned sync response; pending edits retained');
    const current=await db.logs.get(item.id);
-   if(current?.updated_at===item.updated_at)await db.logs.update(item.id,{dirty:0,version:(expected??0)+1,conflictRemote:undefined});
+   if(current?.updated_at===item.updated_at)await db.logs.update(item.id,{dirty:0,version:(expected??0)+1,conflictRemote:undefined,restore_deleted:false});
   }
   if(conflicts)console.warn('Powerbuilding sync preserved pending local conflicts:',conflicts);
   return pending.length+pendingSubs.length;
