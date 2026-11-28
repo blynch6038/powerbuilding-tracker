@@ -1,7 +1,7 @@
 import {program} from './program';
 import {canonicalExerciseName,resolveExercise} from './substitutions';
 import type {Exercise,ExerciseNote,ExerciseSubstitution,WorkoutLog,WorkoutPatch} from './types';
-export interface HistoryDraft {before:WorkoutLog;missing:boolean;patch:WorkoutPatch;replacement:string;choiceBefore?:ExerciseSubstitution}
+export interface HistoryDraft {before:WorkoutLog;missing:boolean;patch:WorkoutPatch;replacement:string;remove?:boolean;choiceBefore?:ExerciseSubstitution}
 export interface BulkPlan {logs:WorkoutLog[];notes:ExerciseNote[];choices:ExerciseSubstitution[]}
 export const historyId=(user:string,week:number,day:string,exercise:string,set:number)=>[user,week,day,exercise,set].join(':');
 export function originalExercise(row:WorkoutLog):Exercise|undefined{return program[row.week-1]?.workouts.find(w=>w.day===row.day)?.exercises.find(e=>e.id===row.exercise_id.split('--sub--')[0].replace(/-warmup$/,''))}
@@ -11,6 +11,7 @@ export function recordedExerciseName(row:WorkoutLog):string{
  return canonicalExerciseName(name.replace(/^flat dumbbell press$/i,'Dumbbell Chest Press'))+(warmup?' · warm-up':'');
 }
 export function changedDraft(draft:HistoryDraft):boolean{
+ if(draft.remove)return true;
  if(draft.replacement.trim()){
   const original=originalExercise(draft.before);
   if(original&&resolveExercise(original,draft.replacement.trim()).id!==draft.before.exercise_id)return true;
@@ -35,6 +36,12 @@ export function buildBulkPlan(user:string,drafts:HistoryDraft[],rows:WorkoutLog[
   const existing=rows.find(r=>r.id===before.id);
   if(draft.missing?!!existing:!existing||!sameVersion(existing,before))throw Error('A set changed since you started editing. Discard that draft and review the latest history.');
   if(!changedDraft(draft))continue;
+  if(draft.remove){
+   if(draft.missing||planned.has(before.id)||destinations.has(before.id))throw Error('Only existing, non-conflicting sets can be deleted.');
+   planned.set(before.id,{...before,deleted_at:now,updated_at:now,dirty:1});
+   notes.push({id:uuid(),user_id:user,week:before.week,day:before.day,exercise_id:before.exercise_id,created_at:now,dirty:1,body:`History deletion · ${recordedExerciseName(before)} · set ${before.set_number} · ${before.weight??'—'} lb × ${before.reps??'—'}`});
+   continue;
+  }
   let after:WorkoutLog={...before,...draft.patch,updated_at:now,dirty:1};
   let reuseExisting=false;
   const replacement=draft.replacement.trim();
