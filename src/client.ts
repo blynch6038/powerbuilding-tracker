@@ -39,7 +39,7 @@ export async function synchronize(userId:string,onRemoteLogs?:(rows:WorkoutLog[]
    const emptyDraft=local?.dirty===1&&!local.done&&!local.skipped&&local.weight==null&&local.reps==null;
    if(local?.dirty===1){
     if(emptyDraft&&row.done){await db.logs.put({...row,dirty:0,conflictRemote:undefined} as WorkoutLog);continue;}
-    if(local.version!==row.version||!!row.deleted_at){
+    if(local.version!==row.version||!!row.deleted_at&&!local.restore_deleted){
      await db.logs.put({...local,conflictRemote:row} as WorkoutLog);
      conflicts++;
     }
