@@ -34,7 +34,8 @@ create or replace function public.sync_set_log_v3(
   p_completed_at timestamptz,
   p_skipped boolean,
   p_expected_version bigint,
-  p_deleted boolean default false
+  p_deleted boolean default false,
+  p_restore boolean default false
 ) returns text
 language plpgsql
 security invoker
@@ -58,6 +59,9 @@ begin
 
   if p_done and p_skipped then
     raise exception 'Cannot complete and skip a set';
+  end if;
+  if p_restore and p_deleted then
+    raise exception 'Cannot restore and delete a set in one operation';
   end if;
 
   if p_deleted then
@@ -93,16 +97,17 @@ begin
          done = p_done,
          completed_at = case when p_done then coalesce(completed_at,p_completed_at) else null end,
          skipped = coalesce(p_skipped,false) and not p_done,
-         updated_at = now()
+         updated_at = now(),
+         deleted_at = case when p_restore then null else deleted_at end
    where id = p_id and user_id = uid
-     and version = p_expected_version and deleted_at is null;
+     and version = p_expected_version and (deleted_at is null or p_restore);
 
   if not found then return 'conflict'; end if;
   return 'ok';
 end;
 $$;
 
-revoke all on function public.sync_set_log_v3(text,integer,text,text,integer,numeric,integer,numeric,boolean,timestamptz,boolean,bigint,boolean) from public, anon;
-grant execute on function public.sync_set_log_v3(text,integer,text,text,integer,numeric,integer,numeric,boolean,timestamptz,boolean,bigint,boolean) to authenticated;
+revoke all on function public.sync_set_log_v3(text,integer,text,text,integer,numeric,integer,numeric,boolean,timestamptz,boolean,bigint,boolean,boolean) from public, anon;
+grant execute on function public.sync_set_log_v3(text,integer,text,text,integer,numeric,integer,numeric,boolean,timestamptz,boolean,bigint,boolean,boolean) to authenticated;
 
 notify pgrst, 'reload schema';
