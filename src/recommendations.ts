@@ -10,15 +10,18 @@ const isLoaded=(v:number|null):v is number=>v!==null&&Number.isFinite(v)&&v>0;
 const roundTo=(value:number,step:number)=>Math.max(step,Math.round(value/step)*step);
 const numericReps=(text:string):number|null=>{const match=text.match(/^\d+/);return match?Number(match[0]):null;};
 
-export function recommendWeight(week:number,day:DayName,exercise:Exercise,allLogs:WorkoutLog[]):Recommendation{
+export function recommendWeight(week:number,day:DayName,exercise:Exercise,allLogs:WorkoutLog[],activeUserId?:string):Recommendation{
  const bench=benchGoalIds.has(exercise.id);
  const prescribed=bench?exercise.target:null;
  // Week 10 is a fixed deload / readiness / max test. Never auto-escalate it.
  if(week===10)return {weight:prescribed,status:bench?'plan':'none',reason:bench?'Week 10 taper is fixed; do not increase the prescribed bench load.':'Week 10 recovery or max-test day: no automatic weight progression.',previous:null,isBenchGoal:bench};
+ const ownerIDs=new Set(allLogs.map(x=>x.user_id).filter((id):id is string=>!!id));
+ const expectedUserId=activeUserId??(ownerIDs.size===1?[...ownerIDs][0]:undefined);
+ if(ownerIDs.size>1||activeUserId&&[...ownerIDs].some(id=>id!==activeUserId))return {weight:null,status:'caution',reason:'Mixed-user workout history was supplied; load records for the active account before requesting a recommendation.',previous:null,isBenchGoal:bench};
  const dayOrder=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
  const movement=(id:string)=>{const key=id.split('--sub--').slice(-1)[0];return key==='conventional-deadlift'?'trap bar deadlift':key==='standing-calf-raise'?'machine seated calf raise':canonicalExerciseName(key.replace(/-/g,' ')).toLowerCase();};
  const matches=(id:string)=>bench?id===exercise.id:movement(id)===movement(exercise.id);
- const daysBefore=allLogs.filter(x=>matches(x.exercise_id)&&x.week>0&&(x.week<week||x.week===week&&dayOrder.indexOf(x.day)<dayOrder.indexOf(day))&&x.user_id&&x.deleted_at===null);
+ const daysBefore=allLogs.filter(x=>matches(x.exercise_id)&&x.week>0&&(x.week<week||x.week===week&&dayOrder.indexOf(x.day)<dayOrder.indexOf(day))&&x.user_id===expectedUserId&&x.deleted_at===null);
  const usable=daysBefore.filter(x=>x.done&&isLoaded(x.weight)&&x.reps!==null);
  const lastWeek=Math.max(0,...usable.map(x=>x.week));
  const lastDay=dayOrder[Math.max(-1,...usable.filter(x=>x.week===lastWeek).map(x=>dayOrder.indexOf(x.day)))];
