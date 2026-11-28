@@ -58,6 +58,23 @@ assert.equal(await database.logs.count(),2);assert.equal(await database.notes.co
 await database.logs.put(source);remote=[source,{...target,weight:200,updated_at:'2099-01-01T00:00:00.000Z'}];
 await assert.rejects(commitHistoryBatch(user,[draft(source,{},'Trap-Bar Deadlift')]),/different values/);
 assert.equal((await database.logs.get(source.id)).done,true);
+// Deletion is scoped, preserves data, and queues a tombstone without changing choices.
+const deletion={...draft(source),remove:true};
+assert.equal(changedDraft(deletion),true);
+const removed=buildBulkPlan(user,[deletion],[source,second],[],now,uuid);
+assert.equal(removed.logs.length,1);
+assert.equal(removed.logs[0].deleted_at,now);
+assert.equal(removed.logs[0].dirty,1);
+assert.equal(removed.logs[0].weight,source.weight);
+assert.equal(removed.choices.length,0);
+assert.equal(removed.notes.length,1);
+assert.throws(()=>buildBulkPlan('another',[deletion],[source],[],now,uuid));
+assert.throws(()=>buildBulkPlan(user,[{...deletion,missing:true}],[],[],now,uuid));
+navigator.onLine=false;
+await database.logs.put(source);
+await commitHistoryBatch(user,[deletion]);
+assert.ok((await database.logs.get(source.id)).deleted_at);
+assert.equal((await database.logs.get(target.id)).done,true);
 await database.delete();
 console.log('Bulk history tests passed: explicit draft-only changes, validation, identity-preserving numeric edits, retained exercise originals, target collisions, per-workout scope, missing sets, account isolation, stale drafts/cloud preflight, atomic rollback and offline restart.');
 
