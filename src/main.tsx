@@ -9,7 +9,7 @@ import React,{useEffect,useState} from 'react';
 import type {User} from '@supabase/supabase-js';
 import type{DayName,Exercise,WorkoutLog,WorkoutPatch,TabName,ExerciseSubstitution}from './types';
 import{createRoot}from'react-dom/client';
-import{supabase,db,idFor,synchronize,cloudRows}from './client';
+import{supabase,db,idFor,synchronize}from './client';
 import{program,maxTest}from './program';
 import './style.css';
 import './selectors.css';
@@ -44,8 +44,7 @@ useEffect(()=>{
 },[user?.id,restoredUser,week,day]);
 useEffect(()=>{supabase.auth.getSession().then(({data})=>{setUser(data.session?.user||null);setLoading(false)});const{data:{subscription}}=supabase.auth.onAuthStateChange((event,session)=>{setUser(session?.user||null);if(event==='PASSWORD_RECOVERY'||(event==='SIGNED_IN'&&location.hash.includes('type=invite')))setPasswordSetup(true)});return()=>subscription.unsubscribe()},[]);
 async function reload(){if(!user)return;try{const [savedLogs,savedChoices]=await Promise.all([db.logs.where('user_id').equals(user.id).toArray(),db.substitutions.where('user_id').equals(user.id).toArray()]);setLogs(savedLogs);setSubstitutions(savedChoices)}catch(e){setStatus('Local storage problem: '+(e instanceof Error?e.message:'Unknown error'))}}
-async function loadCloudHistory(){if(!user||!navigator.onLine)return;const data=await cloudRows<WorkoutLog>('set_logs',user.id);setCloudLogs((data||[]).map(row=>({...row,dirty:0} as WorkoutLog)))}
-async function sync(){if(!user||!navigator.onLine)return;setStatus('Syncing');try{await synchronize(user.id,rows=>setCloudLogs(rows.map(row=>({...row,dirty:0} as WorkoutLog))));const pending=await db.logs.where('user_id').equals(user.id).filter(l=>l.dirty===1).count();setStatus(pending?pending+' set edits pending sync or conflict':'Synced')}catch(e){setStatus('Sync paused: '+(e instanceof Error?e.message:'Unknown error'))}finally{await reload();try{await loadCloudHistory()}catch(e){console.warn('Cloud display refresh paused',e)}}}
+async function sync(){if(!user||!navigator.onLine)return;setStatus('Syncing');try{await synchronize(user.id,rows=>setCloudLogs(rows.map(row=>({...row,dirty:0} as WorkoutLog))));const pending=await db.logs.where('user_id').equals(user.id).filter(l=>l.dirty===1).count();setStatus(pending?pending+' set edits pending sync or conflict':'Synced')}catch(e){setStatus('Sync paused: '+(e instanceof Error?e.message:'Unknown error'))}finally{await reload()}}
 useEffect(()=>{reload();if(user)sync()},[user?.id]);
 useEffect(()=>{const timer=setInterval(()=>sync(),45000),online=()=>sync();window.addEventListener('online',online);return()=>{clearInterval(timer);window.removeEventListener('online',online)}},[user?.id]);
 const displayedLogs=React.useMemo(()=>{
