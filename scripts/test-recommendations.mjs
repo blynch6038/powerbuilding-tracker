@@ -93,3 +93,9 @@ assert.equal(recommendWeight(2,'Monday',dbPress,fractionalDB).weight,37.5);
 assert.match(recommendWeight(2,'Monday',dbPress,fractionalDB).reason,/5 lb per dumbbell increase/);
 assert.equal(recommendWeight(2,'Monday',dbPress,fractionalDB.map(r=>({...r,rpe:8}))).weight,32.5);
 assert.equal(recommendWeight(2,'Monday',dbPress,fractionalDB.map(r=>({...r,rpe:null}))).weight,32.5);
+
+// Refuse mixed-account history and explicit active-user mismatches.
+const mixedHistory=[...logs,...sets('Monday','barbell-bench-press',1,999,5,1).map(row=>({...row,user_id:'other-user'}))];
+assert.equal(recommendWeight(2,'Monday',ex('barbell-bench-press','Barbell Bench Press',5,'5',160),mixedHistory,uid).status,'caution');
+assert.equal(recommendWeight(2,'Monday',ex('barbell-bench-press','Barbell Bench Press',5,'5',160),mixedHistory,uid).weight,null);
+assert.equal(recommendWeight(2,'Monday',ex('barbell-bench-press','Barbell Bench Press',5,'5',160),logs,'other-user').status,'caution');
