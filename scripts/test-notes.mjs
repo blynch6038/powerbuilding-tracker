@@ -3,8 +3,8 @@ import Dexie from 'dexie';
 import assert from 'node:assert/strict';
 import {build} from 'esbuild';
 // Exercise actual Dexie schema and synchronizer, replacing only remote HTTP with an account-filtered fixture.
-let fail=false,failHistory=false;const remote=new Map();
-globalThis.__notesTestClient={from(table){let user;return {select(){return this},eq(_,id){user=id;return this},order(){return this},async range(){if(failHistory&&table==='set_logs')return {error:Error('History pull failed')};if(fail&&table==='exercise_notes')return {error:Error('offline')};return {data:table==='exercise_notes'?[...remote.values()].filter(n=>n.user_id===user):[]}},async upsert(row){if(fail)return {error:Error('offline')};if(!remote.has(row.id))remote.set(row.id,row);return {error:null}}}},rpc(){throw Error('Notes must not write set logs')}};
+let fail=false,failHistory=false,failSetSync=true;const remote=new Map(),remoteLogs=new Map();
+globalThis.__notesTestClient={from(table){let user;return {select(){return this},eq(_,id){user=id;return this},order(){return this},async range(){if(failHistory&&table==='set_logs')return {error:Error('History pull failed')};if(fail&&table==='exercise_notes')return {error:Error('offline')};return {data:table==='exercise_notes'?[...remote.values()].filter(n=>n.user_id===user):table==='set_logs'?[...remoteLogs.values()].filter(r=>r.user_id===user):[]}},async upsert(row){if(fail)return {error:Error('offline')};if(!remote.has(row.id))remote.set(row.id,row);return {error:null}}}},rpc(){if(failSetSync)return Promise.resolve({data:null,error:Error('offline')});return Promise.resolve({data:'conflict',error:null})}};
 Object.defineProperty(globalThis,'navigator',{value:{onLine:true},configurable:true});
 const built=await build({entryPoints:['src/client.ts'],bundle:true,platform:'node',format:'esm',write:false,plugins:[{name:'mock-transport',setup(b){b.onResolve({filter:/^@supabase\/supabase-js$/},()=>({path:'mock',namespace:'fixture'}));b.onLoad({filter:/.*/,namespace:'fixture'},()=>({contents:'export const createClient=()=>globalThis.__notesTestClient;'}))}}]});
 const {db,synchronize}=await import('data:text/javascript;base64,'+Buffer.from(built.outputFiles[0].text).toString('base64'));
@@ -31,6 +31,15 @@ await db.logs.delete('pending-offline-set');
 const other={...row,id:crypto.randomUUID(),user_id:'bob',body:'Other account',dirty:1};await db.notes.add(other);await synchronize(uid);assert.equal(remote.size,1);assert.equal((await db.notes.get(other.id)).dirty,1);
 // Another device's append is pulled without overwriting or collapsing either entry.
 const second={...row,id:crypto.randomUUID(),body:'Second-device detail'};delete second.dirty;remote.set(second.id,second);await synchronize(uid);assert.equal(await db.notes.where('user_id').equals(uid).count(),2);
-assert.equal((await db.notes.get(row.id)).body,row.body);await db.delete();
-console.log('Note sync tests passed: IndexedDB restart, failed upload retention, idempotent retry, account filtering, two-device append preservation.');
+assert.equal((await db.notes.get(row.id)).body,row.body);
+// A remote deletion conflicts with a local unsynced edit; preserve the complete local version.
+const pendingEdit={id:'pending-edit-vs-delete',user_id:uid,week:4,day:'Wednesday',exercise_id:'barbell-bench-press',set_number:1,weight:155,reps:8,rpe:7,done:true,updated_at:'2026-11-28T12:00:00.000Z',deleted_at:null,completed_at:'2026-11-28T12:00:00.000Z',skipped:false,dirty:1};
+await db.logs.put(pendingEdit);
+remoteLogs.set(pendingEdit.id,{...pendingEdit,weight:140,done:false,updated_at:'2026-11-28T13:00:00.000Z',deleted_at:'2026-11-28T13:00:00.000Z',dirty:0});
+failSetSync=false;
+await synchronize(uid);
+const preservedEdit=await db.logs.get(pendingEdit.id);
+assert.equal(preservedEdit.weight,155);assert.equal(preservedEdit.done,true);assert.equal(preservedEdit.dirty,1);
+await db.delete();
+console.log('Sync tests passed: note durability/account scoping and tombstone conflict preservation.');
 
