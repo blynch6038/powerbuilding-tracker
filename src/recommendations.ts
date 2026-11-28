@@ -40,8 +40,9 @@ export function recommendWeight(week:number,day:DayName,exercise:Exercise,allLog
  const lastLoad=lastSet?.weight??0;
  const previous=lastSet?`Week ${lastWeek}: ${lastLoad} lb × ${lastSet.reps} ${/\byd\b/i.test(exercise.reps)?'yd':'reps'} (last completed set ${lastSet.set_number})${maxRpe?`, max RPE ${maxRpe}`:''}`:null;
  if(!completed.length)return {weight:prescribed,status:bench?'caution':'none',reason:'The previous session has no completed loaded sets. Review your log before progressing.',previous,isBenchGoal:bench};
+ const priorLoad=dumbbell?lastLoad:roundTo(lastLoad,5);
  if(!finished||maxRpe>=10){
-  return {weight:bench?Math.min(prescribed??lastLoad,roundTo(lastLoad,5)):roundTo(lastLoad,5),status:'caution',reason:!finished?'Previous session was incomplete or below prescribed reps; hold or reduce and reassess.':'Previous session reached RPE 10. Do not increase until you have more reps in reserve.',previous,isBenchGoal:bench};
+  return {weight:bench?Math.min(prescribed??lastLoad,roundTo(lastLoad,5)):priorLoad,status:'caution',reason:!finished?'Previous session was incomplete or below prescribed reps; hold or reduce and reassess.':'Previous session reached RPE 10. Do not increase until you have more reps in reserve.',previous,isBenchGoal:bench};
  }
  if(bench){
   if(maxRpe>=9)return {weight:Math.min(prescribed??lastLoad,roundTo(lastLoad,5)),status:'hold',reason:'High exertion (RPE 9): consider maintaining the previous load rather than forcing progression.',previous,isBenchGoal:true};
@@ -49,13 +50,13 @@ export function recommendWeight(week:number,day:DayName,exercise:Exercise,allLog
  }
  // Never infer 1RM or load progression from holds, distances or zero-weight movements.
  if(/sec|min|\bm\b|\byd\b/i.test(exercise.reps)||!numericReps(exercise.reps)||!isLoaded(lastLoad))return {weight:null,status:'none',reason:'Time/distance/bodyweight movements need a manual load choice.',previous,isBenchGoal:false};
- if(maxRpe===0)return {weight:roundTo(lastLoad,5),status:'hold',reason:'No valid RPE recorded. Repeat the prior weight until effort is logged.',previous,isBenchGoal:false};
- if(maxRpe>=9)return {weight:roundTo(lastLoad,5),status:'hold',reason:'High RPE: repeat this weight rather than increasing.',previous,isBenchGoal:false};
- if(maxRpe>=8)return {weight:roundTo(lastLoad,5),status:'hold',reason:'RPE 8: maintain the weight and confirm solid form/recovery before progressing.',previous,isBenchGoal:false};
+ if(maxRpe===0)return {weight:priorLoad,status:'hold',reason:'No valid RPE recorded. Repeat the prior weight until effort is logged.',previous,isBenchGoal:false};
+ if(maxRpe>=9)return {weight:priorLoad,status:'hold',reason:'High RPE: repeat this weight rather than increasing.',previous,isBenchGoal:false};
+ if(maxRpe>=8)return {weight:priorLoad,status:'hold',reason:'RPE 8: maintain the weight and confirm solid form/recovery before progressing.',previous,isBenchGoal:false};
  const dumbbell=isDumbbellExercise(exercise.id);
  const step=dumbbell?5:lastLoad<=50?2.5:5;
- const suggested=roundTo(lastLoad+step,step);
- return {weight:suggested,status:'increase',reason:`All planned reps completed at max RPE ${maxRpe}. Based on your last completed set (${lastLoad} lb), consider ${suggested} lb (${suggested-lastLoad} lb${dumbbell?' per dumbbell':''} increase after rounding) if equipment allows.`,previous,isBenchGoal:false};
+ const suggested=dumbbell?lastLoad+5:roundTo(lastLoad+step,step);
+ return {weight:suggested,status:'increase',reason:`All planned reps completed at max RPE ${maxRpe}. Based on your last completed set (${lastLoad} lb), consider ${suggested} lb (${suggested-lastLoad} lb${dumbbell?' per dumbbell':''} increase) if equipment allows.`,previous,isBenchGoal:false};
 }
 
 
