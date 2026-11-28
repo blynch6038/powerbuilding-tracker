@@ -3,7 +3,7 @@ export type TabName='Today'|'Program'|'Progress'|'History'|'Settings';
 export interface Exercise {id:string;name:string;sets:number;reps:string;target:number|null;originalName?:string;originalReps?:string}
 export interface Workout {day:DayName;title:string;exercises:Exercise[]}
 export interface TrainingWeek {week:number;workouts:Workout[]}
-export interface WorkoutLog {id:string;user_id:string;week:number;day:DayName;exercise_id:string;set_number:number;weight:number|null;reps:number|null;rpe:number|null;done:boolean;completed_at?:string|null;skipped?:boolean;updated_at:string;deleted_at:string|null;dirty:0|1}
+export interface WorkoutLog {id:string;user_id:string;week:number;day:DayName;exercise_id:string;set_number:number;weight:number|null;reps:number|null;rpe:number|null;done:boolean;completed_at?:string|null;skipped?:boolean;updated_at:string;deleted_at:string|null;version?:number;conflictRemote?:WorkoutLog;restore_deleted?:boolean;dirty:0|1}
 export type WorkoutPatch=Partial<Pick<WorkoutLog,'weight'|'reps'|'rpe'|'done'|'skipped'>>;
 export type WarmupSet=readonly [weight:number,reps:number];
 
