@@ -1,0 +1,1 @@
+alter table public.exercise_notes drop constraint exercise_notes_user_id_fkey; alter table public.exercise_notes add constraint exercise_notes_user_id_fkey foreign key (user_id) references public.members(user_id) on delete cascade;
