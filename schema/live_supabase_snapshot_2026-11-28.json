@@ -1,0 +1,1218 @@
+{
+  "audit_date": "2026-11-28",
+  "project": {
+    "name": "PowerBuilder",
+    "ref": "qfrkiymocabzwwdmomnq"
+  },
+  "applied_migrations": [
+    {
+      "version": "20261024150704",
+      "name": "powerbuilding_initial_members_and_workout_sync"
+    },
+    {
+      "version": "20261024150716",
+      "name": "secure_workout_sync_invoker_rls"
+    },
+    {
+      "version": "20261024205905",
+      "name": "add_user_exercise_substitutions"
+    },
+    {
+      "version": "20261028095927",
+      "name": "add_append_only_exercise_notes"
+    },
+    {
+      "version": "20261122234158",
+      "name": "cascade_exercise_notes_on_account_deletion"
+    },
+    {
+      "version": "20261125170954",
+      "name": "guard_exercise_substitution_versions"
+    },
+    {
+      "version": "20261126172639",
+      "name": "weekly_completion_metadata"
+    }
+  ],
+  "edge_function": {
+    "name": "delete-account",
+    "version": 1,
+    "status": "ACTIVE",
+    "verify_jwt": false,
+    "sha256": "b657af45b3e60bb69d9f730bfc21878903a8fa4ed6cbaca8cd923b3fd937eb5e",
+    "source_path": "supabase/functions/delete-account/index.ts"
+  },
+  "public_schema": {
+    "views": [],
+    "tables": [
+      {
+        "name": "exercise_notes",
+        "schema": "public",
+        "columns": [
+          {
+            "name": "id",
+            "default": null,
+            "ordinal": 1,
+            "identity": null,
+            "nullable": false,
+            "data_type": "uuid",
+            "generated": null
+          },
+          {
+            "name": "user_id",
+            "default": null,
+            "ordinal": 2,
+            "identity": null,
+            "nullable": false,
+            "data_type": "uuid",
+            "generated": null
+          },
+          {
+            "name": "week",
+            "default": null,
+            "ordinal": 3,
+            "identity": null,
+            "nullable": false,
+            "data_type": "integer",
+            "generated": null
+          },
+          {
+            "name": "day",
+            "default": null,
+            "ordinal": 4,
+            "identity": null,
+            "nullable": false,
+            "data_type": "text",
+            "generated": null
+          },
+          {
+            "name": "exercise_id",
+            "default": null,
+            "ordinal": 5,
+            "identity": null,
+            "nullable": false,
+            "data_type": "text",
+            "generated": null
+          },
+          {
+            "name": "body",
+            "default": null,
+            "ordinal": 6,
+            "identity": null,
+            "nullable": false,
+            "data_type": "text",
+            "generated": null
+          },
+          {
+            "name": "created_at",
+            "default": "now()",
+            "ordinal": 7,
+            "identity": null,
+            "nullable": false,
+            "data_type": "timestamp with time zone",
+            "generated": null
+          }
+        ],
+        "indexes": [
+          {
+            "name": "exercise_notes_pkey",
+            "definition": "CREATE UNIQUE INDEX exercise_notes_pkey ON public.exercise_notes USING btree (id)"
+          },
+          {
+            "name": "exercise_notes_user_id_idx",
+            "definition": "CREATE INDEX exercise_notes_user_id_idx ON public.exercise_notes USING btree (user_id)"
+          }
+        ],
+        "policies": [
+          {
+            "cmd": "INSERT",
+            "qual": null,
+            "roles": [
+              "authenticated"
+            ],
+            "tablename": "exercise_notes",
+            "permissive": "PERMISSIVE",
+            "policyname": "notes_owner_insert",
+            "schemaname": "public",
+            "with_check": "((( SELECT auth.uid() AS uid) = user_id) AND (EXISTS ( SELECT 1\n   FROM members m\n  WHERE (m.user_id = ( SELECT auth.uid() AS uid)))))"
+          },
+          {
+            "cmd": "SELECT",
+            "qual": "(( SELECT auth.uid() AS uid) = user_id)",
+            "roles": [
+              "authenticated"
+            ],
+            "tablename": "exercise_notes",
+            "permissive": "PERMISSIVE",
+            "policyname": "notes_owner_read",
+            "schemaname": "public",
+            "with_check": null
+          }
+        ],
+        "triggers": [],
+        "constraints": [
+          {
+            "name": "exercise_notes_body_check",
+            "type": "c",
+            "definition": "CHECK (char_length(btrim(body)) >= 1 AND char_length(btrim(body)) <= 2000)"
+          },
+          {
+            "name": "exercise_notes_day_check",
+            "type": "c",
+            "definition": "CHECK (day = ANY (ARRAY['Monday'::text, 'Tuesday'::text, 'Wednesday'::text, 'Thursday'::text, 'Friday'::text, 'Saturday'::text]))"
+          },
+          {
+            "name": "exercise_notes_exercise_id_check",
+            "type": "c",
+            "definition": "CHECK (char_length(exercise_id) >= 1 AND char_length(exercise_id) <= 240)"
+          },
+          {
+            "name": "exercise_notes_pkey",
+            "type": "p",
+            "definition": "PRIMARY KEY (id)"
+          },
+          {
+            "name": "exercise_notes_user_id_fkey",
+            "type": "f",
+            "definition": "FOREIGN KEY (user_id) REFERENCES members(user_id) ON DELETE CASCADE"
+          },
+          {
+            "name": "exercise_notes_week_check",
+            "type": "c",
+            "definition": "CHECK (week >= 1 AND week <= 10)"
+          }
+        ],
+        "table_grants": [
+          {
+            "grantee": "authenticated",
+            "grantable": "NO",
+            "privilege": "INSERT"
+          },
+          {
+            "grantee": "authenticated",
+            "grantable": "NO",
+            "privilege": "SELECT"
+          },
+          {
+            "grantee": "postgres",
+            "grantable": "YES",
+            "privilege": "DELETE"
+          },
+          {
+            "grantee": "postgres",
+            "grantable": "YES",
+            "privilege": "INSERT"
+          },
+          {
+            "grantee": "postgres",
+            "grantable": "YES",
+            "privilege": "REFERENCES"
+          },
+          {
+            "grantee": "postgres",
+            "grantable": "YES",
+            "privilege": "SELECT"
+          },
+          {
+            "grantee": "postgres",
+            "grantable": "YES",
+            "privilege": "TRIGGER"
+          },
+          {
+            "grantee": "postgres",
+            "grantable": "YES",
+            "privilege": "TRUNCATE"
+          },
+          {
+            "grantee": "postgres",
+            "grantable": "YES",
+            "privilege": "UPDATE"
+          },
+          {
+            "grantee": "service_role",
+            "grantable": "NO",
+            "privilege": "DELETE"
+          },
+          {
+            "grantee": "service_role",
+            "grantable": "NO",
+            "privilege": "INSERT"
+          },
+          {
+            "grantee": "service_role",
+            "grantable": "NO",
+            "privilege": "REFERENCES"
+          },
+          {
+            "grantee": "service_role",
+            "grantable": "NO",
+            "privilege": "SELECT"
+          },
+          {
+            "grantee": "service_role",
+            "grantable": "NO",
+            "privilege": "TRIGGER"
+          },
+          {
+            "grantee": "service_role",
+            "grantable": "NO",
+            "privilege": "TRUNCATE"
+          },
+          {
+            "grantee": "service_role",
+            "grantable": "NO",
+            "privilege": "UPDATE"
+          }
+        ],
+        "row_level_security_forced": false,
+        "row_level_security_enabled": true
+      },
+      {
+        "name": "exercise_substitutions",
+        "schema": "public",
+        "columns": [
+          {
+            "name": "id",
+            "default": null,
+            "ordinal": 1,
+            "identity": null,
+            "nullable": false,
+            "data_type": "text",
+            "generated": null
+          },
+          {
+            "name": "user_id",
+            "default": null,
+            "ordinal": 2,
+            "identity": null,
+            "nullable": false,
+            "data_type": "uuid",
+            "generated": null
+          },
+          {
+            "name": "week",
+            "default": null,
+            "ordinal": 3,
+            "identity": null,
+            "nullable": false,
+            "data_type": "integer",
+            "generated": null
+          },
+          {
+            "name": "day",
+            "default": null,
+            "ordinal": 4,
+            "identity": null,
+            "nullable": false,
+            "data_type": "text",
+            "generated": null
+          },
+          {
+            "name": "exercise_id",
+            "default": null,
+            "ordinal": 5,
+            "identity": null,
+            "nullable": false,
+            "data_type": "text",
+            "generated": null
+          },
+          {
+            "name": "replacement",
+            "default": null,
+            "ordinal": 6,
+            "identity": null,
+            "nullable": false,
+            "data_type": "text",
+            "generated": null
+          },
+          {
+            "name": "updated_at",
+            "default": "now()",
+            "ordinal": 7,
+            "identity": null,
+            "nullable": false,
+            "data_type": "timestamp with time zone",
+            "generated": null
+          }
+        ],
+        "indexes": [
+          {
+            "name": "exercise_substitutions_pkey",
+            "definition": "CREATE UNIQUE INDEX exercise_substitutions_pkey ON public.exercise_substitutions USING btree (id)"
+          },
+          {
+            "name": "exercise_substitutions_user_id_week_day_exercise_id_key",
+            "definition": "CREATE UNIQUE INDEX exercise_substitutions_user_id_week_day_exercise_id_key ON public.exercise_substitutions USING btree (user_id, week, day, exercise_id)"
+          }
+        ],
+        "policies": [
+          {
+            "cmd": "INSERT",
+            "qual": null,
+            "roles": [
+              "authenticated"
+            ],
+            "tablename": "exercise_substitutions",
+            "permissive": "PERMISSIVE",
+            "policyname": "insert own exercise substitutions",
+            "schemaname": "public",
+            "with_check": "((( SELECT auth.uid() AS uid) = user_id) AND (EXISTS ( SELECT 1\n   FROM members m\n  WHERE (m.user_id = ( SELECT auth.uid() AS uid)))))"
+          },
+          {
+            "cmd": "SELECT",
+            "qual": "(( SELECT auth.uid() AS uid) = user_id)",
+            "roles": [
+              "authenticated"
+            ],
+            "tablename": "exercise_substitutions",
+            "permissive": "PERMISSIVE",
+            "policyname": "read own exercise substitutions",
+            "schemaname": "public",
+            "with_check": null
+          },
+          {
+            "cmd": "UPDATE",
+            "qual": "(( SELECT auth.uid() AS uid) = user_id)",
+            "roles": [
+              "authenticated"
+            ],
+            "tablename": "exercise_substitutions",
+            "permissive": "PERMISSIVE",
+            "policyname": "update own exercise substitutions",
+            "schemaname": "public",
+            "with_check": "(( SELECT auth.uid() AS uid) = user_id)"
+          }
+        ],
+        "triggers": [
+          {
+            "name": "guard_exercise_substitution_version",
+            "definition": "CREATE TRIGGER guard_exercise_substitution_version BEFORE UPDATE ON exercise_substitutions FOR EACH ROW EXECUTE FUNCTION guard_exercise_substitution_version()"
+          }
+        ],
+        "constraints": [
+          {
+            "name": "exercise_substitutions_day_check",
+            "type": "c",
+            "definition": "CHECK (day = ANY (ARRAY['Monday'::text, 'Tuesday'::text, 'Wednesday'::text, 'Thursday'::text, 'Friday'::text, 'Saturday'::text]))"
+          },
+          {
+            "name": "exercise_substitutions_pkey",
+            "type": "p",
+            "definition": "PRIMARY KEY (id)"
+          },
+          {
+            "name": "exercise_substitutions_replacement_check",
+            "type": "c",
+            "definition": "CHECK (length(replacement) >= 1 AND length(replacement) <= 120)"
+          },
+          {
+            "name": "exercise_substitutions_user_id_fkey",
+            "type": "f",
+            "definition": "FOREIGN KEY (user_id) REFERENCES members(user_id) ON DELETE CASCADE"
+          },
+          {
+            "name": "exercise_substitutions_user_id_week_day_exercise_id_key",
+            "type": "u",
+            "definition": "UNIQUE (user_id, week, day, exercise_id)"
+          },
+          {
+            "name": "exercise_substitutions_week_check",
+            "type": "c",
+            "definition": "CHECK (week >= 1 AND week <= 10)"
+          }
+        ],
+        "table_grants": [
+          {
+            "grantee": "anon",
+            "grantable": "NO",
+            "privilege": "DELETE"
+          },
+          {
+            "grantee": "anon",
+            "grantable": "NO",
+            "privilege": "INSERT"
+          },
+          {
+            "grantee": "anon",
+            "grantable": "NO",
+            "privilege": "REFERENCES"
+          },
+          {
+            "grantee": "anon",
+            "grantable": "NO",
+            "privilege": "SELECT"
+          },
+          {
+            "grantee": "anon",
+            "grantable": "NO",
+            "privilege": "TRIGGER"
+          },
+          {
+            "grantee": "anon",
+            "grantable": "NO",
+            "privilege": "TRUNCATE"
+          },
+          {
+            "grantee": "anon",
+            "grantable": "NO",
+            "privilege": "UPDATE"
+          },
+          {
+            "grantee": "authenticated",
+            "grantable": "NO",
+            "privilege": "DELETE"
+          },
+          {
+            "grantee": "authenticated",
+            "grantable": "NO",
+            "privilege": "INSERT"
+          },
+          {
+            "grantee": "authenticated",
+            "grantable": "NO",
+            "privilege": "REFERENCES"
+          },
+          {
+            "grantee": "authenticated",
+            "grantable": "NO",
+            "privilege": "SELECT"
+          },
+          {
+            "grantee": "authenticated",
+            "grantable": "NO",
+            "privilege": "TRIGGER"
+          },
+          {
+            "grantee": "authenticated",
+            "grantable": "NO",
+            "privilege": "TRUNCATE"
+          },
+          {
+            "grantee": "authenticated",
+            "grantable": "NO",
+            "privilege": "UPDATE"
+          },
+          {
+            "grantee": "postgres",
+            "grantable": "YES",
+            "privilege": "DELETE"
+          },
+          {
+            "grantee": "postgres",
+            "grantable": "YES",
+            "privilege": "INSERT"
+          },
+          {
+            "grantee": "postgres",
+            "grantable": "YES",
+            "privilege": "REFERENCES"
+          },
+          {
+            "grantee": "postgres",
+            "grantable": "YES",
+            "privilege": "SELECT"
+          },
+          {
+            "grantee": "postgres",
+            "grantable": "YES",
+            "privilege": "TRIGGER"
+          },
+          {
+            "grantee": "postgres",
+            "grantable": "YES",
+            "privilege": "TRUNCATE"
+          },
+          {
+            "grantee": "postgres",
+            "grantable": "YES",
+            "privilege": "UPDATE"
+          },
+          {
+            "grantee": "service_role",
+            "grantable": "NO",
+            "privilege": "DELETE"
+          },
+          {
+            "grantee": "service_role",
+            "grantable": "NO",
+            "privilege": "INSERT"
+          },
+          {
+            "grantee": "service_role",
+            "grantable": "NO",
+            "privilege": "REFERENCES"
+          },
+          {
+            "grantee": "service_role",
+            "grantable": "NO",
+            "privilege": "SELECT"
+          },
+          {
+            "grantee": "service_role",
+            "grantable": "NO",
+            "privilege": "TRIGGER"
+          },
+          {
+            "grantee": "service_role",
+            "grantable": "NO",
+            "privilege": "TRUNCATE"
+          },
+          {
+            "grantee": "service_role",
+            "grantable": "NO",
+            "privilege": "UPDATE"
+          }
+        ],
+        "row_level_security_forced": false,
+        "row_level_security_enabled": true
+      },
+      {
+        "name": "members",
+        "schema": "public",
+        "columns": [
+          {
+            "name": "user_id",
+            "default": null,
+            "ordinal": 1,
+            "identity": null,
+            "nullable": false,
+            "data_type": "uuid",
+            "generated": null
+          },
+          {
+            "name": "created_at",
+            "default": "now()",
+            "ordinal": 2,
+            "identity": null,
+            "nullable": false,
+            "data_type": "timestamp with time zone",
+            "generated": null
+          }
+        ],
+        "indexes": [
+          {
+            "name": "members_pkey",
+            "definition": "CREATE UNIQUE INDEX members_pkey ON public.members USING btree (user_id)"
+          }
+        ],
+        "policies": [
+          {
+            "cmd": "SELECT",
+            "qual": "(( SELECT auth.uid() AS uid) = user_id)",
+            "roles": [
+              "authenticated"
+            ],
+            "tablename": "members",
+            "permissive": "PERMISSIVE",
+            "policyname": "member can read own membership",
+            "schemaname": "public",
+            "with_check": null
+          }
+        ],
+        "triggers": [],
+        "constraints": [
+          {
+            "name": "members_pkey",
+            "type": "p",
+            "definition": "PRIMARY KEY (user_id)"
+          },
+          {
+            "name": "members_user_id_fkey",
+            "type": "f",
+            "definition": "FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+          }
+        ],
+        "table_grants": [
+          {
+            "grantee": "anon",
+            "grantable": "NO",
+            "privilege": "DELETE"
+          },
+          {
+            "grantee": "anon",
+            "grantable": "NO",
+            "privilege": "INSERT"
+          },
+          {
+            "grantee": "anon",
+            "grantable": "NO",
+            "privilege": "REFERENCES"
+          },
+          {
+            "grantee": "anon",
+            "grantable": "NO",
+            "privilege": "SELECT"
+          },
+          {
+            "grantee": "anon",
+            "grantable": "NO",
+            "privilege": "TRIGGER"
+          },
+          {
+            "grantee": "anon",
+            "grantable": "NO",
+            "privilege": "TRUNCATE"
+          },
+          {
+            "grantee": "anon",
+            "grantable": "NO",
+            "privilege": "UPDATE"
+          },
+          {
+            "grantee": "authenticated",
+            "grantable": "NO",
+            "privilege": "DELETE"
+          },
+          {
+            "grantee": "authenticated",
+            "grantable": "NO",
+            "privilege": "INSERT"
+          },
+          {
+            "grantee": "authenticated",
+            "grantable": "NO",
+            "privilege": "REFERENCES"
+          },
+          {
+            "grantee": "authenticated",
+            "grantable": "NO",
+            "privilege": "SELECT"
+          },
+          {
+            "grantee": "authenticated",
+            "grantable": "NO",
+            "privilege": "TRIGGER"
+          },
+          {
+            "grantee": "authenticated",
+            "grantable": "NO",
+            "privilege": "TRUNCATE"
+          },
+          {
+            "grantee": "authenticated",
+            "grantable": "NO",
+            "privilege": "UPDATE"
+          },
+          {
+            "grantee": "postgres",
+            "grantable": "YES",
+            "privilege": "DELETE"
+          },
+          {
+            "grantee": "postgres",
+            "grantable": "YES",
+            "privilege": "INSERT"
+          },
+          {
+            "grantee": "postgres",
+            "grantable": "YES",
+            "privilege": "REFERENCES"
+          },
+          {
+            "grantee": "postgres",
+            "grantable": "YES",
+            "privilege": "SELECT"
+          },
+          {
+            "grantee": "postgres",
+            "grantable": "YES",
+            "privilege": "TRIGGER"
+          },
+          {
+            "grantee": "postgres",
+            "grantable": "YES",
+            "privilege": "TRUNCATE"
+          },
+          {
+            "grantee": "postgres",
+            "grantable": "YES",
+            "privilege": "UPDATE"
+          },
+          {
+            "grantee": "service_role",
+            "grantable": "NO",
+            "privilege": "DELETE"
+          },
+          {
+            "grantee": "service_role",
+            "grantable": "NO",
+            "privilege": "INSERT"
+          },
+          {
+            "grantee": "service_role",
+            "grantable": "NO",
+            "privilege": "REFERENCES"
+          },
+          {
+            "grantee": "service_role",
+            "grantable": "NO",
+            "privilege": "SELECT"
+          },
+          {
+            "grantee": "service_role",
+            "grantable": "NO",
+            "privilege": "TRIGGER"
+          },
+          {
+            "grantee": "service_role",
+            "grantable": "NO",
+            "privilege": "TRUNCATE"
+          },
+          {
+            "grantee": "service_role",
+            "grantable": "NO",
+            "privilege": "UPDATE"
+          }
+        ],
+        "row_level_security_forced": false,
+        "row_level_security_enabled": true
+      },
+      {
+        "name": "set_logs",
+        "schema": "public",
+        "columns": [
+          {
+            "name": "id",
+            "default": null,
+            "ordinal": 1,
+            "identity": null,
+            "nullable": false,
+            "data_type": "text",
+            "generated": null
+          },
+          {
+            "name": "user_id",
+            "default": null,
+            "ordinal": 2,
+            "identity": null,
+            "nullable": false,
+            "data_type": "uuid",
+            "generated": null
+          },
+          {
+            "name": "week",
+            "default": null,
+            "ordinal": 3,
+            "identity": null,
+            "nullable": false,
+            "data_type": "integer",
+            "generated": null
+          },
+          {
+            "name": "day",
+            "default": null,
+            "ordinal": 4,
+            "identity": null,
+            "nullable": false,
+            "data_type": "text",
+            "generated": null
+          },
+          {
+            "name": "exercise_id",
+            "default": null,
+            "ordinal": 5,
+            "identity": null,
+            "nullable": false,
+            "data_type": "text",
+            "generated": null
+          },
+          {
+            "name": "set_number",
+            "default": null,
+            "ordinal": 6,
+            "identity": null,
+            "nullable": false,
+            "data_type": "integer",
+            "generated": null
+          },
+          {
+            "name": "weight",
+            "default": null,
+            "ordinal": 7,
+            "identity": null,
+            "nullable": true,
+            "data_type": "numeric",
+            "generated": null
+          },
+          {
+            "name": "reps",
+            "default": null,
+            "ordinal": 8,
+            "identity": null,
+            "nullable": true,
+            "data_type": "integer",
+            "generated": null
+          },
+          {
+            "name": "rpe",
+            "default": null,
+            "ordinal": 9,
+            "identity": null,
+            "nullable": true,
+            "data_type": "numeric",
+            "generated": null
+          },
+          {
+            "name": "done",
+            "default": "false",
+            "ordinal": 10,
+            "identity": null,
+            "nullable": false,
+            "data_type": "boolean",
+            "generated": null
+          },
+          {
+            "name": "updated_at",
+            "default": "now()",
+            "ordinal": 11,
+            "identity": null,
+            "nullable": false,
+            "data_type": "timestamp with time zone",
+            "generated": null
+          },
+          {
+            "name": "deleted_at",
+            "default": null,
+            "ordinal": 12,
+            "identity": null,
+            "nullable": true,
+            "data_type": "timestamp with time zone",
+            "generated": null
+          },
+          {
+            "name": "completed_at",
+            "default": null,
+            "ordinal": 13,
+            "identity": null,
+            "nullable": true,
+            "data_type": "timestamp with time zone",
+            "generated": null
+          },
+          {
+            "name": "skipped",
+            "default": "false",
+            "ordinal": 14,
+            "identity": null,
+            "nullable": false,
+            "data_type": "boolean",
+            "generated": null
+          }
+        ],
+        "indexes": [
+          {
+            "name": "set_logs_pkey",
+            "definition": "CREATE UNIQUE INDEX set_logs_pkey ON public.set_logs USING btree (id)"
+          },
+          {
+            "name": "set_logs_user_id_week_day_exercise_id_set_number_key",
+            "definition": "CREATE UNIQUE INDEX set_logs_user_id_week_day_exercise_id_set_number_key ON public.set_logs USING btree (user_id, week, day, exercise_id, set_number)"
+          },
+          {
+            "name": "set_logs_user_time",
+            "definition": "CREATE INDEX set_logs_user_time ON public.set_logs USING btree (user_id, updated_at)"
+          }
+        ],
+        "policies": [
+          {
+            "cmd": "INSERT",
+            "qual": null,
+            "roles": [
+              "authenticated"
+            ],
+            "tablename": "set_logs",
+            "permissive": "PERMISSIVE",
+            "policyname": "member can insert own logs",
+            "schemaname": "public",
+            "with_check": "((( SELECT auth.uid() AS uid) = user_id) AND (EXISTS ( SELECT 1\n   FROM members m\n  WHERE (m.user_id = ( SELECT auth.uid() AS uid)))))"
+          },
+          {
+            "cmd": "SELECT",
+            "qual": "(( SELECT auth.uid() AS uid) = user_id)",
+            "roles": [
+              "authenticated"
+            ],
+            "tablename": "set_logs",
+            "permissive": "PERMISSIVE",
+            "policyname": "member can read own logs",
+            "schemaname": "public",
+            "with_check": null
+          },
+          {
+            "cmd": "UPDATE",
+            "qual": "(( SELECT auth.uid() AS uid) = user_id)",
+            "roles": [
+              "authenticated"
+            ],
+            "tablename": "set_logs",
+            "permissive": "PERMISSIVE",
+            "policyname": "member can update own logs",
+            "schemaname": "public",
+            "with_check": "(( SELECT auth.uid() AS uid) = user_id)"
+          }
+        ],
+        "triggers": [
+          {
+            "name": "normalize_set_completion",
+            "definition": "CREATE TRIGGER normalize_set_completion BEFORE INSERT OR UPDATE ON set_logs FOR EACH ROW EXECUTE FUNCTION normalize_set_completion()"
+          }
+        ],
+        "constraints": [
+          {
+            "name": "set_logs_day_check",
+            "type": "c",
+            "definition": "CHECK (day = ANY (ARRAY['Monday'::text, 'Tuesday'::text, 'Wednesday'::text, 'Thursday'::text, 'Friday'::text, 'Saturday'::text]))"
+          },
+          {
+            "name": "set_logs_pkey",
+            "type": "p",
+            "definition": "PRIMARY KEY (id)"
+          },
+          {
+            "name": "set_logs_reps_check",
+            "type": "c",
+            "definition": "CHECK (reps IS NULL OR reps >= 0 AND reps <= 1000)"
+          },
+          {
+            "name": "set_logs_rpe_check",
+            "type": "c",
+            "definition": "CHECK (rpe IS NULL OR rpe >= 1::numeric AND rpe <= 10::numeric)"
+          },
+          {
+            "name": "set_logs_set_number_check",
+            "type": "c",
+            "definition": "CHECK (set_number >= 1 AND set_number <= 30)"
+          },
+          {
+            "name": "set_logs_user_id_fkey",
+            "type": "f",
+            "definition": "FOREIGN KEY (user_id) REFERENCES members(user_id) ON DELETE CASCADE"
+          },
+          {
+            "name": "set_logs_user_id_week_day_exercise_id_set_number_key",
+            "type": "u",
+            "definition": "UNIQUE (user_id, week, day, exercise_id, set_number)"
+          },
+          {
+            "name": "set_logs_week_check",
+            "type": "c",
+            "definition": "CHECK (week >= 1 AND week <= 10)"
+          },
+          {
+            "name": "set_logs_weight_check",
+            "type": "c",
+            "definition": "CHECK (weight IS NULL OR weight >= 0::numeric AND weight <= 3000::numeric)"
+          }
+        ],
+        "table_grants": [
+          {
+            "grantee": "anon",
+            "grantable": "NO",
+            "privilege": "DELETE"
+          },
+          {
+            "grantee": "anon",
+            "grantable": "NO",
+            "privilege": "INSERT"
+          },
+          {
+            "grantee": "anon",
+            "grantable": "NO",
+            "privilege": "REFERENCES"
+          },
+          {
+            "grantee": "anon",
+            "grantable": "NO",
+            "privilege": "SELECT"
+          },
+          {
+            "grantee": "anon",
+            "grantable": "NO",
+            "privilege": "TRIGGER"
+          },
+          {
+            "grantee": "anon",
+            "grantable": "NO",
+            "privilege": "TRUNCATE"
+          },
+          {
+            "grantee": "anon",
+            "grantable": "NO",
+            "privilege": "UPDATE"
+          },
+          {
+            "grantee": "authenticated",
+            "grantable": "NO",
+            "privilege": "DELETE"
+          },
+          {
+            "grantee": "authenticated",
+            "grantable": "NO",
+            "privilege": "INSERT"
+          },
+          {
+            "grantee": "authenticated",
+            "grantable": "NO",
+            "privilege": "REFERENCES"
+          },
+          {
+            "grantee": "authenticated",
+            "grantable": "NO",
+            "privilege": "SELECT"
+          },
+          {
+            "grantee": "authenticated",
+            "grantable": "NO",
+            "privilege": "TRIGGER"
+          },
+          {
+            "grantee": "authenticated",
+            "grantable": "NO",
+            "privilege": "TRUNCATE"
+          },
+          {
+            "grantee": "authenticated",
+            "grantable": "NO",
+            "privilege": "UPDATE"
+          },
+          {
+            "grantee": "postgres",
+            "grantable": "YES",
+            "privilege": "DELETE"
+          },
+          {
+            "grantee": "postgres",
+            "grantable": "YES",
+            "privilege": "INSERT"
+          },
+          {
+            "grantee": "postgres",
+            "grantable": "YES",
+            "privilege": "REFERENCES"
+          },
+          {
+            "grantee": "postgres",
+            "grantable": "YES",
+            "privilege": "SELECT"
+          },
+          {
+            "grantee": "postgres",
+            "grantable": "YES",
+            "privilege": "TRIGGER"
+          },
+          {
+            "grantee": "postgres",
+            "grantable": "YES",
+            "privilege": "TRUNCATE"
+          },
+          {
+            "grantee": "postgres",
+            "grantable": "YES",
+            "privilege": "UPDATE"
+          },
+          {
+            "grantee": "service_role",
+            "grantable": "NO",
+            "privilege": "DELETE"
+          },
+          {
+            "grantee": "service_role",
+            "grantable": "NO",
+            "privilege": "INSERT"
+          },
+          {
+            "grantee": "service_role",
+            "grantable": "NO",
+            "privilege": "REFERENCES"
+          },
+          {
+            "grantee": "service_role",
+            "grantable": "NO",
+            "privilege": "SELECT"
+          },
+          {
+            "grantee": "service_role",
+            "grantable": "NO",
+            "privilege": "TRIGGER"
+          },
+          {
+            "grantee": "service_role",
+            "grantable": "NO",
+            "privilege": "TRUNCATE"
+          },
+          {
+            "grantee": "service_role",
+            "grantable": "NO",
+            "privilege": "UPDATE"
+          }
+        ],
+        "row_level_security_forced": false,
+        "row_level_security_enabled": true
+      }
+    ],
+    "functions": [
+      {
+        "name": "guard_exercise_substitution_version",
+        "schema": "public",
+        "language": "plpgsql",
+        "definition": "CREATE OR REPLACE FUNCTION public.guard_exercise_substitution_version()\n RETURNS trigger\n LANGUAGE plpgsql\n SET search_path TO ''\nAS $function$ begin if new.updated_at < old.updated_at or (new.updated_at = old.updated_at and new.replacement is distinct from old.replacement) then return old; end if; return new; end; $function$\n",
+        "volatility": "v",
+        "security_definer": false,
+        "identity_arguments": "",
+        "search_path_config": [
+          "search_path=\"\""
+        ]
+      },
+      {
+        "name": "normalize_set_completion",
+        "schema": "public",
+        "language": "plpgsql",
+        "definition": "CREATE OR REPLACE FUNCTION public.normalize_set_completion()\n RETURNS trigger\n LANGUAGE plpgsql\n SET search_path TO ''\nAS $function$\nbegin\n if new.done then\n  new.skipped:=false;\n  if tg_op='UPDATE' and old.done then new.completed_at:=coalesce(old.completed_at,new.completed_at); end if;\n else new.completed_at:=null; end if;\n return new;\nend $function$\n",
+        "volatility": "v",
+        "security_definer": false,
+        "identity_arguments": "",
+        "search_path_config": [
+          "search_path=\"\""
+        ]
+      },
+      {
+        "name": "register_invited_user",
+        "schema": "public",
+        "language": "plpgsql",
+        "definition": "CREATE OR REPLACE FUNCTION public.register_invited_user()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\nbegin\n insert into public.members(user_id) values(new.id) on conflict do nothing;\n return new;\nend $function$\n",
+        "volatility": "v",
+        "security_definer": true,
+        "identity_arguments": "",
+        "search_path_config": [
+          "search_path=\"\""
+        ]
+      },
+      {
+        "name": "sync_set_log",
+        "schema": "public",
+        "language": "plpgsql",
+        "definition": "CREATE OR REPLACE FUNCTION public.sync_set_log(p_id text, p_week integer, p_day text, p_exercise_id text, p_set_number integer, p_weight numeric, p_reps integer, p_rpe numeric, p_done boolean, p_updated_at timestamp with time zone)\n RETURNS text\n LANGUAGE plpgsql\n SET search_path TO ''\nAS $function$\ndeclare existing public.set_logs%rowtype; uid uuid;\nbegin\n uid := (select auth.uid());\n if uid is null or not exists(select 1 from public.members where user_id=uid) then raise exception 'Unauthorized'; end if;\n if p_id <> uid::text||':'||p_week::text||':'||p_day||':'||p_exercise_id||':'||p_set_number::text then raise exception 'Invalid record id';end if;\n select * into existing from public.set_logs where id=p_id and user_id=uid;\n if found then\n   if existing.updated_at > p_updated_at then return 'conflict'; end if;\n   update public.set_logs set weight=p_weight,reps=p_reps,rpe=p_rpe,done=p_done,updated_at=p_updated_at where id=p_id and user_id=uid;\n else\n   insert into public.set_logs(id,user_id,week,day,exercise_id,set_number,weight,reps,rpe,done,updated_at)\n   values(p_id,uid,p_week,p_day,p_exercise_id,p_set_number,p_weight,p_reps,p_rpe,p_done,p_updated_at);\n end if;\n return 'ok';\nend $function$\n",
+        "volatility": "v",
+        "security_definer": false,
+        "identity_arguments": "p_id text, p_week integer, p_day text, p_exercise_id text, p_set_number integer, p_weight numeric, p_reps integer, p_rpe numeric, p_done boolean, p_updated_at timestamp with time zone",
+        "search_path_config": [
+          "search_path=\"\""
+        ]
+      },
+      {
+        "name": "sync_set_log_v2",
+        "schema": "public",
+        "language": "plpgsql",
+        "definition": "CREATE OR REPLACE FUNCTION public.sync_set_log_v2(p_id text, p_week integer, p_day text, p_exercise_id text, p_set_number integer, p_weight numeric, p_reps integer, p_rpe numeric, p_done boolean, p_updated_at timestamp with time zone, p_completed_at timestamp with time zone, p_skipped boolean)\n RETURNS text\n LANGUAGE plpgsql\n SET search_path TO ''\nAS $function$\ndeclare uid uuid := (select auth.uid()); outcome text;\nbegin\n if uid is null or not exists(select 1 from public.members where user_id=uid) then raise exception 'Unauthorized'; end if;\n if p_id is distinct from uid::text||':'||p_week::text||':'||p_day||':'||p_exercise_id||':'||p_set_number::text then raise exception 'Invalid record id'; end if;\n if p_done and p_skipped then raise exception 'Cannot complete and skip a set'; end if;\n if exists(select 1 from public.set_logs where id=p_id and user_id=uid and deleted_at is not null) then return 'conflict'; end if;\n outcome:=public.sync_set_log(p_id,p_week,p_day,p_exercise_id,p_set_number,p_weight,p_reps,p_rpe,p_done,p_updated_at);\n if outcome='ok' then\n update public.set_logs set completed_at=case when p_done then coalesce(completed_at,p_completed_at) else null end,skipped=coalesce(p_skipped,false) and not p_done where id=p_id and user_id=uid and updated_at=p_updated_at;\n end if;\n return outcome;\nend $function$\n",
+        "volatility": "v",
+        "security_definer": false,
+        "identity_arguments": "p_id text, p_week integer, p_day text, p_exercise_id text, p_set_number integer, p_weight numeric, p_reps integer, p_rpe numeric, p_done boolean, p_updated_at timestamp with time zone, p_completed_at timestamp with time zone, p_skipped boolean",
+        "search_path_config": [
+          "search_path=\"\""
+        ]
+      }
+    ],
+    "snapshot_kind": "metadata only; no application rows included; not a migration",
+    "captured_at_utc": "2026-11-28T14:20:36.220704",
+    "postgres_server_version": "17.11"
+  }
+}
