@@ -7,6 +7,6 @@ export interface WorkoutLog {id:string;user_id:string;week:number;day:DayName;ex
 export type WorkoutPatch=Partial<Pick<WorkoutLog,'weight'|'reps'|'rpe'|'done'|'skipped'>>;
 export type WarmupSet=readonly [weight:number,reps:number];
 
-export interface ExerciseSubstitution {id:string;user_id:string;week:number;day:DayName;exercise_id:string;replacement:string;updated_at:string;dirty:0|1}
+export interface ExerciseSubstitution {id:string;user_id:string;week:number;day:DayName;exercise_id:string;replacement:string;updated_at:string;version?:number;conflictRemoteChoice?:ExerciseSubstitution;dirty:0|1}
 
 export interface ExerciseNote {id:string;user_id:string;week:number;day:DayName;exercise_id:string;body:string;created_at:string;dirty:0|1}
