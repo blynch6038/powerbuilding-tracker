@@ -1,0 +1,79 @@
+name: Validate database migrations
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  replay:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17.11
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: powerbuilding_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d powerbuilding_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y postgresql-client
+      - name: Create Supabase auth stubs
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql --host localhost --username postgres --dbname powerbuilding_test --set ON_ERROR_STOP=1 <<'SQL'
+          CREATE ROLE anon NOLOGIN;
+          CREATE ROLE authenticated NOLOGIN;
+          CREATE SCHEMA auth;
+          CREATE TABLE auth.users (id uuid PRIMARY KEY);
+          CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$ SELECT NULL::uuid $$;
+          SQL
+      - name: Replay migration history
+        env:
+          PGPASSWORD: postgres
+        run: |
+          for migration in supabase/migrations/*.sql; do
+            test -f "$migration"
+            psql --host localhost --username postgres --dbname powerbuilding_test --set ON_ERROR_STOP=1 --file "$migration"
+          done
+      - name: Assert rebuilt schema
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql --host localhost --username postgres --dbname powerbuilding_test --set ON_ERROR_STOP=1 <<'SQL'
+          DO $check$
+          BEGIN
+            IF (SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+                WHERE n.nspname = 'public'
+                  AND c.relname = ANY (ARRAY['members','set_logs','exercise_substitutions','exercise_notes'])
+                  AND c.relrowsecurity) <> 4 THEN
+              RAISE EXCEPTION 'Expected all four application tables to have RLS enabled';
+            END IF;
+            IF (SELECT count(*) FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+                WHERE n.nspname = 'public'
+                  AND p.proname = ANY (ARRAY['sync_set_log','sync_set_log_v2','guard_exercise_substitution_version','normalize_set_completion'])) <> 4 THEN
+              RAISE EXCEPTION 'Expected all synchronization and integrity functions to exist';
+            END IF;
+            IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                           WHERE table_schema = 'public' AND table_name = 'set_logs'
+                             AND column_name = 'completed_at')
+               OR NOT EXISTS (SELECT 1 FROM information_schema.columns
+                              WHERE table_schema = 'public' AND table_name = 'set_logs'
+                                AND column_name = 'skipped') THEN
+              RAISE EXCEPTION 'Weekly completion columns are missing';
+            END IF;
+            IF NOT EXISTS (SELECT 1 FROM pg_constraint
+                           WHERE conrelid = 'public.exercise_notes'::regclass
+                             AND contype = 'f' AND confdeltype = 'c') THEN
+              RAISE EXCEPTION 'Exercise note account-deletion cascade is missing';
+            END IF;
+          END
+          $check$;
+          SQL
