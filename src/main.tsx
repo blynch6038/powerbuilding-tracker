@@ -69,10 +69,15 @@ const activeExercise=(ex:Exercise):Exercise=>resolveExercise(ex,chosen(ex));
 async function changeExercise(ex:Exercise,replacement:string){
  const weeks=substitutionWeeks(program,week,workout.day,ex.id,applyFuture);
  const now=new Date().toISOString();
- try{await db.transaction('rw',db.substitutions,()=>db.substitutions.bulkPut(weeks.map(w=>({
-  id:user!.id+':'+w+':'+workout.day+':'+ex.id,user_id:user!.id,week:w,day:workout.day,
-  exercise_id:ex.id,replacement,updated_at:now,dirty:1 as const
- }))));
+ try{await db.transaction('rw',db.substitutions,async()=>{
+  const values:ExerciseSubstitution[]=[];
+  for(const w of weeks){
+   const id=user!.id+':'+w+':'+workout.day+':'+ex.id;
+   const prior=await db.substitutions.get(id);
+   values.push({id,user_id:user!.id,week:w,day:workout.day,exercise_id:ex.id,replacement,updated_at:now,version:prior?.version,conflictRemoteChoice:prior?.conflictRemoteChoice,dirty:1});
+  }
+  await db.substitutions.bulkPut(values);
+ });
  await reload();setStatus('Exercise choice saved on device • pending sync');
  }catch(e){setStatus('Exercise choice could not be saved: '+(e instanceof Error?e.message:'Storage unavailable'))}
 }
@@ -85,6 +90,12 @@ if((record.weight!==null&&(!Number.isFinite(record.weight)||record.weight<0||rec
 if(record.done&&(record.weight===null||record.reps===null||record.reps<=0))throw new Error('Enter weight and actual reps before completing this set');
 await db.logs.put(record);await reload();setStatus('Saved on device • pending sync');
 if(record.done&&!old?.done){window.dispatchEvent(new Event('powerbuilder:set-completed'));navigator.vibrate?.(30)}
+}
+async function resolveSubstitutionConflict(local:ExerciseSubstitution,useCloud:boolean){
+const remote=local.conflictRemoteChoice;if(!remote)return;
+if(useCloud){await db.substitutions.put({...remote,dirty:0,conflictRemoteChoice:undefined})}
+else{await db.substitutions.put({...local,version:remote.version,conflictRemoteChoice:undefined,updated_at:new Date().toISOString(),dirty:1})}
+await reload();setStatus(useCloud?'Exercise choice conflict resolved using cloud':'Device exercise choice queued against the reviewed cloud version');if(!useCloud)await sync();
 }
 async function resolveSetConflict(local:WorkoutLog,useCloud:boolean){
 const remote=local.conflictRemote;if(!remote)return;
@@ -104,6 +115,6 @@ return <><header className="top"><div className="brand"><b className="mark">P</b
 {tab==='Program'&&program.map(w=><section className="exercise" key={w.week}><h3>Week {w.week}</h3>{w.workouts.map(d=><button className="programButton" key={d.day} onClick={()=>{setWeek(w.week);setDay(d.day);setTab('Today')}}>{'Day '+(w.workouts.indexOf(d)+1)} · {d.title} →</button>)}</section>)}
 {tab==='Progress'&&<><WeeklyAdherence userId={user.id} logs={displayedLogs} choices={substitutions}/><GoalProgress logs={displayedLogs} userId={user.id}/><ProgressCharts logs={displayedLogs} userId={user.id} choices={substitutions}/><ExerciseProgress logs={displayedLogs}/>{done>0?<section className="hero"><small>TRAINING COMPLETION</small><h2>{done} sets completed</h2><p>Across your recorded history</p></section>:<section className="exercise"><p>Complete a working set to see progress.</p></section>}</>}
 <section hidden={tab!=='History'}><HistoryEditor key={user.id} userId={user.id} logs={displayedLogs} choices={substitutions} initialWeek={week} onSaved={async()=>{await reload();await sync()}} onRefresh={async()=>{await sync()}}/></section>
-{tab==='Settings'&&<><PasswordPanel/>{logs.filter(row=>row.user_id===user.id&&row.conflictRemote).length>0&&<section className="exercise"><h3>Sync conflicts</h3><p>Both versions are preserved. Choose which version to keep for each set.</p>{logs.filter(row=>row.user_id===user.id&&row.conflictRemote).map(row=><article className="panel" key={row.id}><b>Week {row.week} · {row.day} · {row.exercise_id} · Set {row.set_number}</b><p>On this device: {row.weight??'—'} lb × {row.reps??'—'} · RPE {row.rpe??'—'}</p><p>Cloud: {row.conflictRemote!.deleted_at?'Deleted':(row.conflictRemote!.weight??'—')+' lb × '+(row.conflictRemote!.reps??'—')+' · RPE '+(row.conflictRemote!.rpe??'—')}</p><button className="action" onClick={()=>void resolveSetConflict(row,true)}>Use cloud version</button><button className="action" onClick={()=>void resolveSetConflict(row,false)}>{row.conflictRemote!.deleted_at?'Restore this device version':'Keep this device version'}</button></article>)}</section>}<section className="exercise"><h3>Account & data</h3><p><a href="/support/">Support</a> · <a href="/privacy/">Privacy Policy</a></p><p>{user!.email}</p><button className="action" onClick={sync}>Sync now</button><button className="action" onClick={exportBackup}>Export JSON backup</button><button className="action" onClick={()=>supabase.auth.signOut()}>Sign out</button><small>Entries are saved locally, then synchronized. Back up before clearing browser data.</small></section></>}</main><nav>{['Today','Program','Progress','History','Settings'].map(t=><button key={t} className={tab===t?'active':''} onClick={()=>{setTab(t as TabName);history.replaceState({},'',location.pathname+location.search+(t==='History'?'#history':''))}}><span aria-hidden="true">{t==='Today'?'◉':t==='Program'?'☷':t==='Progress'?'▥':t==='History'?'✎':'⚙'}</span>{t==='Today'?'Workout':t}</button>)}</nav></>}
+{tab==='Settings'&&<><PasswordPanel/>{logs.filter(row=>row.user_id===user.id&&row.conflictRemote).length>0&&<section className="exercise"><h3>Sync conflicts</h3><p>Both versions are preserved. Choose which version to keep for each set.</p>{logs.filter(row=>row.user_id===user.id&&row.conflictRemote).map(row=><article className="panel" key={row.id}><b>Week {row.week} · {row.day} · {row.exercise_id} · Set {row.set_number}</b><p>On this device: {row.weight??'—'} lb × {row.reps??'—'} · RPE {row.rpe??'—'}</p><p>Cloud: {row.conflictRemote!.deleted_at?'Deleted':(row.conflictRemote!.weight??'—')+' lb × '+(row.conflictRemote!.reps??'—')+' · RPE '+(row.conflictRemote!.rpe??'—')}</p><button className="action" onClick={()=>void resolveSetConflict(row,true)}>Use cloud version</button><button className="action" onClick={()=>void resolveSetConflict(row,false)}>{row.conflictRemote!.deleted_at?'Restore this device version':'Keep this device version'}</button></article>)}</section>}{substitutions.filter(row=>row.user_id===user.id&&row.conflictRemoteChoice).length>0&&<section className="exercise"><h3>Exercise choice conflicts</h3><p>Choose which device’s exercise substitution should remain.</p>{substitutions.filter(row=>row.user_id===user.id&&row.conflictRemoteChoice).map(row=><article className="panel" key={row.id}><b>Week {row.week} · {row.day} · {row.exercise_id}</b><p>On this device: {row.replacement}</p><p>Cloud: {row.conflictRemoteChoice!.replacement}</p><button className="action" onClick={()=>void resolveSubstitutionConflict(row,true)}>Use cloud choice</button><button className="action" onClick={()=>void resolveSubstitutionConflict(row,false)}>Keep this device choice</button></article>)}</section>}<section className="exercise"><h3>Account & data</h3><p><a href="/support/">Support</a> · <a href="/privacy/">Privacy Policy</a></p><p>{user!.email}</p><button className="action" onClick={sync}>Sync now</button><button className="action" onClick={exportBackup}>Export JSON backup</button><button className="action" onClick={()=>supabase.auth.signOut()}>Sign out</button><small>Entries are saved locally, then synchronized. Back up before clearing browser data.</small></section></>}</main><nav>{['Today','Program','Progress','History','Settings'].map(t=><button key={t} className={tab===t?'active':''} onClick={()=>{setTab(t as TabName);history.replaceState({},'',location.pathname+location.search+(t==='History'?'#history':''))}}><span aria-hidden="true">{t==='Today'?'◉':t==='Program'?'☷':t==='Progress'?'▥':t==='History'?'✎':'⚙'}</span>{t==='Today'?'Workout':t}</button>)}</nav></>}
 createRoot(document.getElementById('root')!).render(<AppErrorBoundary><App/></AppErrorBoundary>);
 
