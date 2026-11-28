@@ -37,9 +37,12 @@ export async function synchronize(userId:string):Promise<number|undefined>{
    const local=await db.logs.get(row.id);
    // A never-completed blank form field is superseded by a completed cloud import.
    const emptyDraft=local?.dirty===1&&!local.done&&!local.skipped&&local.weight==null&&local.reps==null;
-   if(!local||row.deleted_at||emptyDraft&&row.done||(!local.dirty&&row.updated_at>local.updated_at)){
+   // A cloud tombstone must not erase an edited local row. Preserve that edit as pending
+   // and surface a conflict; the server RPC will reject uploads against the tombstone.
+   const sameDelete=local?.dirty===1&&!!local.deleted_at&&!!row.deleted_at;
+   if(!local||row.deleted_at&&(!local.dirty||sameDelete)||emptyDraft&&row.done||(!local.dirty&&row.updated_at>local.updated_at)){
     await db.logs.put({...row,dirty:0} as WorkoutLog);
-   }else if(local.dirty&&row.updated_at>local.updated_at){
+   }else if(local.dirty&&(row.deleted_at||row.updated_at>local.updated_at)){
     conflicts++;
    }
   }
