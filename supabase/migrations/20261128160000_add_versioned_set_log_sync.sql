@@ -43,8 +43,6 @@ set search_path = ''
 as $$
 declare
   uid uuid := (select auth.uid());
-  current_version bigint;
-  current_deleted timestamptz;
 begin
   if uid is null or not exists (
     select 1 from public.members where user_id = uid
