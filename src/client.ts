@@ -36,15 +36,17 @@ export async function synchronize(userId:string,onRemoteLogs?:(rows:WorkoutLog[]
   let conflicts=0;
   for(const row of remote||[]){
    const local=await db.logs.get(row.id);
-   // A never-completed blank form field is superseded by a completed cloud import.
    const emptyDraft=local?.dirty===1&&!local.done&&!local.skipped&&local.weight==null&&local.reps==null;
-   // A cloud tombstone must not erase an edited local row. Preserve that edit as pending
-   // and surface a conflict; the server RPC will reject uploads against the tombstone.
-   const sameDelete=local?.dirty===1&&!!local.deleted_at&&!!row.deleted_at;
-   if(!local||row.deleted_at&&(!local.dirty||sameDelete)||emptyDraft&&row.done||(!local.dirty&&row.updated_at>local.updated_at)){
-    await db.logs.put({...row,dirty:0} as WorkoutLog);
-   }else if(local.dirty&&(row.deleted_at||row.updated_at>local.updated_at)){
-    conflicts++;
+   if(local?.dirty===1){
+    if(emptyDraft&&row.done){await db.logs.put({...row,dirty:0,conflictRemote:undefined} as WorkoutLog);continue;}
+    if(local.version!==row.version||!!row.deleted_at){
+     await db.logs.put({...local,conflictRemote:row} as WorkoutLog);
+     conflicts++;
+    }
+    continue;
+   }
+   if(!local||row.updated_at>local.updated_at||row.deleted_at){
+    await db.logs.put({...row,dirty:0,conflictRemote:undefined} as WorkoutLog);
    }
   }
   const remoteSubs=await cloudRows<ExerciseSubstitution>('exercise_substitutions',userId);
@@ -80,19 +82,14 @@ export async function synchronize(userId:string,onRemoteLogs?:(rows:WorkoutLog[]
   const pending=await db.logs.where('dirty').equals(1).filter(x=>x.user_id===userId).toArray();
   for(const item of pending){
    const{dirty,...p}=item;
-   if(p.deleted_at){
-    const {data,error}=await supabase.from('set_logs').update({deleted_at:p.deleted_at,updated_at:p.updated_at}).eq('id',p.id).eq('user_id',userId).is('deleted_at',null).lte('updated_at',p.updated_at).select('id');
-    if(error)throw error;
-    if(!data?.length){conflicts++;continue;}
-    const current=await db.logs.get(item.id);
-    if(current?.updated_at===item.updated_at)await db.logs.update(item.id,{dirty:0});
-    continue;
-   }
-   const{data,error}=await supabase.rpc('sync_set_log_v2',{p_id:p.id,p_week:p.week,p_day:p.day,p_exercise_id:p.exercise_id,p_set_number:p.set_number,p_weight:p.weight,p_reps:p.reps,p_rpe:p.rpe,p_done:p.done,p_updated_at:p.updated_at,p_completed_at:p.completed_at??null,p_skipped:p.skipped??false});
+   if(p.conflictRemote){conflicts++;continue;}
+   const expected=p.version??null;
+   const{data,error}=await supabase.rpc('sync_set_log_v3',{p_id:p.id,p_week:p.week,p_day:p.day,p_exercise_id:p.exercise_id,p_set_number:p.set_number,p_weight:p.weight,p_reps:p.reps,p_rpe:p.rpe,p_done:p.done,p_completed_at:p.completed_at??null,p_skipped:p.skipped??false,p_expected_version:expected,p_deleted:!!p.deleted_at});
    if(error)throw error;
    if(data==='conflict'){conflicts++;continue;}
+   if(data!=='ok')throw new Error('Unexpected versioned sync response; pending edits retained');
    const current=await db.logs.get(item.id);
-   if(current?.updated_at===item.updated_at)await db.logs.update(item.id,{dirty:0});
+   if(current?.updated_at===item.updated_at)await db.logs.update(item.id,{dirty:0,version:(expected??0)+1,conflictRemote:undefined});
   }
   if(conflicts)console.warn('Powerbuilding sync preserved pending local conflicts:',conflicts);
   return pending.length+pendingSubs.length;
